@@ -41,7 +41,7 @@ class D2Q9(Lattice):
 
     def __init__(self):
         """
-        Initialize the BGKCollision class with lattice parameters.
+        Initialize the D2Q9 class with lattice parameters.
 
         Args:
             velocities (numpy.ndarray): Discrete velocity vectors (e.g., D2Q9).
