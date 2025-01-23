@@ -121,8 +121,8 @@ class D2Q9(Lattice):
         Returns:
             numpy.ndarray: Equilibrium distribution functions for all directions.
         """
-        feq = np.zeros(len(self.velocities))
-        for i, xi in enumerate(self.velocities):
+        feq = np.zeros(len(self.LATTICE_VELOCITES))
+        for i, xi in enumerate(self.LATTICE_VELOCITES):
             cu = np.dot(xi, u)  # Dot product of velocity vector and u
             feq[i] = self.weights[i] * rho * (
                 1 + cu / self.cs2 + 0.5 * (cu**2) / self.cs2**2 - 0.5 * (np.dot(u, u)) / self.cs2
