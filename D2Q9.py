@@ -12,12 +12,12 @@ class Lattice:
         pass
 
 class D2Q9(Lattice):
-    """
-    Class representation of the D2Q9 Lattice for the Lattice Boltzmann Method.
-    """
+
+    # D2Q9 Lattice Parameters
+
     DIRECTIONS = 9  # Number of velocity directions
 
-    # Velocity vectors for the D2Q9 lattice
+    # Directionality Velocity vectors for the D2Q9 lattice
     VELOCITIES = np.array([
         [0, 0],  # Stationary
         [1, 0],  # Right
@@ -30,65 +30,41 @@ class D2Q9(Lattice):
         [1, -1]  # Bottom-right
     ])
 
+    # Weights for the D2Q9 lattice
+    WEIGHTS = np.array([
+        4/9,  # Stationary
+        1/9, 1/9, 1/9, 1/9,  # Cardinal directions
+        1/36, 1/36, 1/36, 1/36  # Diagonal directions
+    ])
+
+    CS = 1 / np.sqrt(3)  # Speed of sound in lattice units
+
     def __init__(self):
         """
-        Initialize the D2Q9 Lattice object, including weights.
+        Initialize the BGKCollision class with lattice parameters.
+
+        Args:
+            velocities (numpy.ndarray): Discrete velocity vectors (e.g., D2Q9).
+            weights (numpy.ndarray): Weight for each lattice direction.
+            cs (float): Speed of sound in lattice units.
         """
-        self.weights = self.compute_weights()
-        self.velocities = self.compute_lattice_velocities()
+        self.velocities = self.VELOCITIES
+        self.weights = self.WEIGHTS
+        self.cs = self.CS
+        self.cs2 = self.cs**2  # Square of speed of sound
+        self.compute_lattice_velocities()
 
-    @staticmethod
-    def compute_weights():
+    def compute_density(self, f):
         """
-        Compute the weights for the D2Q9 lattice.
+        Compute the macroscopic density (rho).
 
-        The weights are predefined constants that represent the proportion of particles 
-        traveling in each direction within the D2Q9 model. These weights ensure 
-        accurate simulation of fluid properties and preserve conservation laws.
-
-        The directions and their corresponding weights are:
-        - Stationary (center node): weight = 4/9
-        - Horizontal and vertical directions: weight = 1/9 each
-        - Diagonal directions: weight = 1/36 each
+        Args:
+            f (numpy.ndarray): Distribution functions for a node.
 
         Returns:
-            numpy.ndarray: Array of weights for the D2Q9 lattice directions.
+            float: Macroscopic density.
         """
-        return np.array([
-            4 / 9,  # Stationary
-            *([1 / 9] * 4),  # Horizontal and vertical directions
-            *([1 / 36] * 4)  # Diagonal directions
-        ])
-
-    def initialize_single_lattice_unit(self):
-        """
-        Initialize a single lattice unit for the D2Q9 model.
-
-        This function sets up the initial values for a single unit in the lattice. The lattice 
-        unit is represented as an array of 9 values (one for each velocity direction). 
-        Each value corresponds to the particle distribution in that direction.
-
-        Steps:
-        1. Create an empty array of zeros for the 9 velocity directions.
-        2. Assume an initial uniform density (rho = 1.0).
-        3. Assign the equilibrium distribution for each direction based on the lattice weights.
-
-        Returns:
-            numpy.ndarray: A (1, 9) array representing the initial particle distribution 
-            functions for a single lattice unit, rounded to three decimal places.
-        """
-        # Initialize an array for the distribution functions, one for each direction
-        f = np.zeros((1, self.DIRECTIONS))
-
-        # Set initial density to 1.0 (uniform distribution)
-        rho = 1.0  # Initial density of the fluid at this lattice unit
-
-        # Compute the initial distribution for each direction using the lattice weights
-        for i in range(self.DIRECTIONS):
-            f[0, i] = rho * self.weights[i]
-
-        # Return the distribution functions rounded to 3 decimal places for clarity
-        return np.round(f, 3)
+        return np.sum(f)
 
     def compute_lattice_velocities(self):
         """
@@ -104,60 +80,79 @@ class D2Q9(Lattice):
         """
         velocities = np.zeros((self.DIRECTIONS, 2))
 
-        # Define velocities based on the equations
         velocities[0] = [0, 0]  # Stationary
-        for i in range(1, 5):
+    
+        for i in range(1, 5): # Cardinal directions
             velocities[i] = [
                 np.cos((i - 1) * np.pi / 2),
                 np.sin((i - 1) * np.pi / 2)
             ]
-        for i in range(5, 9):
+
+        for i in range(5, 9): # Diagonal directions
             velocities[i] = np.sqrt(2) * np.array([
                 np.cos((i - 5) * np.pi / 2 + np.pi / 4),
                 np.sin((i - 5) * np.pi / 2 + np.pi / 4)
             ])
 
+        self.LATTICE_VELOCITES = np.round(velocities, 3)
         return np.round(velocities, 3)
 
-    def equilibrium_distribution_single_unit(self, rho, ux, uy):
+    def compute_velocity(self, f, rho):
         """
-        Compute the equilibrium distribution for a single lattice unit in the D2Q9 model.
-
-        This function calculates the equilibrium distribution, which represents the idealized
-        particle distribution in each direction based on the local fluid density and velocity.
-        The equilibrium distribution ensures consistency with the macroscopic fluid equations.
-
-        Steps:
-        1. Initialize an array of zeros for the distribution values in 9 directions.
-        2. For each direction, compute the dot product of the velocity vector with the
-           macroscopic fluid velocity (ux, uy).
-        3. Use the LBM equilibrium formula to calculate the distribution for each direction:
-           f_eq[i] = w[i] * rho * (1 + (xi[i] . u) / c_s^2 + (xi[i] . u)^2 / (2*c_s^4) - u.u / (2*c_s^2))
-        4. Return the computed distribution rounded to 3 decimal places.
+        Compute the macroscopic velocity (u).
 
         Args:
-            rho (float): Local fluid density.
-            ux (float): Velocity in the x-direction.
-            uy (float): Velocity in the y-direction.
+            f (numpy.ndarray): Distribution functions for a node.
+            rho (float): Macroscopic density.
 
         Returns:
-            numpy.ndarray: Equilibrium distribution function for a single lattice unit.
+            numpy.ndarray: Macroscopic velocity vector (u).
         """
-        # Initialize an array to store the equilibrium distribution for 9 directions
-        feq = np.zeros(self.DIRECTIONS)
+        return np.dot(f, self.LATTICE_VELOCITES) / rho
 
-        # Speed of sound squared
-        c_s2 = 1 / 3
+    def compute_equilibrium(self, rho, u):
+        """
+        Compute the equilibrium distribution function (f_eq).
 
-        # Loop through each velocity direction
+        Args:
+            rho (float): Macroscopic density.
+            u (numpy.ndarray): Macroscopic velocity vector.
+
+        Returns:
+            numpy.ndarray: Equilibrium distribution functions for all directions.
+        """
+        feq = np.zeros(len(self.velocities))
         for i, xi in enumerate(self.velocities):
-            # Compute the dot product of the velocity vector and the macroscopic velocity
-            cu = (xi[0] * ux + xi[1] * uy) / c_s2
-
-            # Calculate the equilibrium distribution for this direction using the LBM formula
+            cu = np.dot(xi, u)  # Dot product of velocity vector and u
             feq[i] = self.weights[i] * rho * (
-                1 + cu + 0.5 * cu**2 - 0.5 * (ux**2 + uy**2) / c_s2
+                1 + cu / self.cs2 + 0.5 * (cu**2) / self.cs2**2 - 0.5 * (np.dot(u, u)) / self.cs2
             )
-
-        # Return the computed equilibrium distribution rounded for readability
         return np.round(feq, 3)
+
+def main():
+
+    # Table of particle distribution functions (PDF) for each node in the lattice
+    nodes = {  
+        "A": np.array([1.63, 0.61, 0.41, 0.27, 0.41, 0.15, 0.07, 0.07, 0.16]),
+        "B": np.array([1.67, 0.42, 0.42, 0.42, 0.42, 0.1, 0.11, 0.1, 0.11]),
+        "C": np.array([1.66, 0.5, 0.42, 0.35, 0.42, 0.12, 0.09, 0.08, 0.13])
+    }
+
+    # Initialize the D2Q9 lattice
+    d2q9 = D2Q9()
+
+
+    # Compute and print results for each node
+    for node, f in nodes.items():
+        rho = d2q9.compute_density(f)
+        u = d2q9.compute_velocity(f, rho)
+        feq = d2q9.compute_equilibrium(rho, u)
+
+        print(f"Node {node}:")
+        print(f"  Density (rho): {rho:.3f}")
+        print(f"  Velocity (u): {u}")
+        print(f"  Equilibrium Distribution (f_eq): {feq}")
+        print()
+
+if __name__ == "__main__":
+    main()
