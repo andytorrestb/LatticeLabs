@@ -1,80 +1,60 @@
 import numpy as np
-from D2Q9 import D2Q9
+from D2Q9 import D2Q9  # Assuming the D2Q9 class is defined in a file named D2Q9.py
 
-def test_equilibrium_distribution():
-    """
-    Test the equilibrium distribution function with varying inputs for accuracy.
-    """
-    # Instantiate the D2Q9Lattice class
-    lattice = D2Q9()
 
-    # Define test cases with inputs and expected outputs
-    test_cases = [
-        {
-            "rho": 1.0,
-            "ux": 0.0,
-            "uy": 0.0,
-            "expected": np.round(np.array([
-                4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36
-            ]), 3)
+def test_main():
+    """Test the main function of D2Q9.py using assert statements."""
+
+    # Expected input data from the D2Q9 class
+    nodes = {
+        "A": np.array([1.63, 0.61, 0.41, 0.27, 0.41, 0.15, 0.07, 0.07, 0.16]),
+        "B": np.array([1.67, 0.42, 0.42, 0.42, 0.42, 0.1, 0.11, 0.1, 0.11]),
+        "C": np.array([1.66, 0.5, 0.42, 0.35, 0.42, 0.12, 0.09, 0.08, 0.13]),
+    }
+
+    # Initialize the D2Q9 lattice
+    d2q9 = D2Q9()
+
+    # Expected results (replace with actual expected values based on calculations or specifications)
+    expected_results = {
+        "A": {
+            "density": 3.78,
+            "velocity": np.array([0.1349, -0.0026]),
+            "equilibrium": np.array([1.634109, 0.61293, 0.405207, 0.272932, 
+                                    0.411874, 0.152066, 0.067740, 0.068732, 0.154407]),
         },
-        {
-            "rho": 1.2,
-            "ux": 0.1,
-            "uy": 0.0,
-            "expected": np.round(np.array([
-                0.525, 0.177, 0.131, 0.097, 0.131, 0.044, 0.024, 0.024, 0.044
-            ]), 3)
+
+        "B": {
+            "density": 3.77,
+            "velocity": np.array([0.0, 0.3681e-17]),
+            "equilibrium": np.array([1.675556, 0.418889, 0.418889, 0.418889,
+                                    0.418889, 0.104722, 0.104722, 0.104722, 0.104722]),
         },
-        {
-            "rho": 0.8,
-            "ux": 0.0,
-            "uy": -0.1,
-            "expected": np.round(np.array([
-                0.35, 0.088, 0.065, 0.088, 0.118, 0.016, 0.016, 0.03, 0.03
-            ]), 3)
-        }
-    ]
 
-    # Run each test case
-    for i, case in enumerate(test_cases):
-        rho = case["rho"]
-        ux = case["ux"]
-        uy = case["uy"]
-        expected = case["expected"]
+        "C": {
+            "density": 3.77,
+            "velocity": np.array([0.0610, 0.0]),
+            "equilibrium": np.array([1.666201, 0.500233, 0.416550, 0.346899,
+                                    0.416550, 0.125058, 0.086725, 0.086725, 0.125058]),
+        },
+    }
 
-        # Compute equilibrium distribution using the D2Q9Lattice class method
-        result = lattice.equilibrium_distribution_single_unit(rho, ux, uy)
+    # Test each node
+    for node, f in nodes.items():
+        rho, u = d2q9.moment_rho_u(f)
+        feq = d2q9.compute_equilibrium(rho, u)
 
-        # Compare result to expected value
-        if np.allclose(result, expected):
-            print(f"Test case {i+1} passed.")
-        else:
-            print(f"Test case {i+1} failed.\nExpected: {expected}\nGot: {result}")
+        # Validate density
+        assert np.isclose(rho, expected_results[node]["density"], atol=1e-2), f"Density mismatch for node {node}"  # Tolerance level
 
-def test_initialize_single_lattice_unit():
-    """
-    Test the initialization of a single lattice unit.
-    """
-    # Instantiate the D2Q9Lattice class
-    lattice = D2Q9()
+        # Validate velocity
+        assert np.allclose(u, expected_results[node]["velocity"], atol=1e-2), f"Velocity mismatch for node {node}"
 
-    # Expected output for uniform density (rho = 1.0)
-    expected = np.round(np.array([
-        4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36
-    ]), 3)
+        # Validate equilibrium distribution
+        assert np.allclose(feq, expected_results[node]["equilibrium"], atol=1e-3), f"Equilibrium distribution mismatch for node {node}"
 
-    # Initialize lattice unit using the D2Q9Lattice class method
-    result = lattice.initialize_single_lattice_unit()[0]  # Extract the single lattice unit values
+    print("All tests passed successfully!")
 
-    # Compare result to expected value
-    if np.allclose(result, expected):
-        print("Initialization test passed.")
-    else:
-        print(f"Initialization test failed.\nExpected: {expected}\nGot: {result}")
 
-# Run the tests
 if __name__ == "__main__":
-    print("Running tests for the D2Q9 lattice...")
-    test_initialize_single_lattice_unit()
-    test_equilibrium_distribution()
+    test_main()
