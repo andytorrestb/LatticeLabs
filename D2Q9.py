@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 class Lattice:
     """
@@ -129,6 +130,32 @@ class D2Q9(Lattice):
             )
         return np.round(feq, 3)
 
+    def moment_rho_u(self, f):
+        """
+        Compute the moments of the distribution function for density and velocity.
+
+        Returns:
+           dict: Moments of the distribution function for density and velocity.
+        """
+        rho = self.compute_density(f)
+        U = self.compute_velocity(f, rho)
+
+        return rho, U
+
+    def post_collision_pdf(self, f, feq, tau):
+        """
+        Compute the post-collision distribution function (f_post) using BGK collision operator.
+
+        Args:
+            f (numpy.ndarray): Distribution functions for a node.
+            feq (numpy.ndarray): Equilibrium distribution functions for all directions.
+            tau (float): Relaxation time.
+
+        Returns:
+            numpy.ndarray: Post-collision distribution functions for all directions.
+        """
+        return f - (f - feq) / tau
+
 def main():
 
     # Table of particle distribution functions (PDF) for each node in the lattice
@@ -142,17 +169,84 @@ def main():
     d2q9 = D2Q9()
 
 
-    # Compute and print results for each node
-    for node, f in nodes.items():
-        rho = d2q9.compute_density(f)
-        u = d2q9.compute_velocity(f, rho)
-        feq = d2q9.compute_equilibrium(rho, u)
+    # List of tau values to analyze
+    tau_values = [0.6, 0.5, 0.49]
 
-        print(f"Node {node}:")
-        print(f"  Density (rho): {rho:.3f}")
-        print(f"  Velocity (u): {u}")
-        print(f"  Equilibrium Distribution (f_eq): {feq}")
-        print()
+    # Outer loop for different tau values
+    for tau in tau_values:
+        # Compute and print results for each node
+        for node, f in nodes.items():
+
+            # Calculate the density and velocity for the lattice node.
+            rho, u = d2q9.moment_rho_u(f)
+            feq = d2q9.compute_equilibrium(rho, u)
+
+            # Store time history of the results.
+            f_hist = [f]
+            rho_hist = [rho]
+            u_hist = [u]
+
+            # Perform a loop to demonstrate the time evolution of the lattice node using the BGK operator.
+            for i in range(999):
+
+                # Compute the post-collision distribution function using the BGK collision operator.
+                f_post = d2q9.post_collision_pdf(f, feq, tau=tau)
+                rho_star, u_star = d2q9.moment_rho_u(f_post)
+
+                # Save the results in the history for analysis.
+                f_hist.append(f_post)
+                rho_hist.append(rho_star)
+                u_hist.append(u_star)
+
+                # Update the distribution function for the next iteration.
+                f = f_post
+                rho = rho_star
+                u = u_star
+
+            # plot the results for the lattice node.
+            import matplotlib.pyplot as plt
+
+            f_hist = np.array(f_hist)
+            rho_hist = np.array(rho_hist)
+            u_hist = np.array(u_hist)
+
+            # Create directory for the current tau value if it doesn't exist
+            tau_dir = f'tau_{tau}'
+            if not os.path.exists(tau_dir):
+                os.makedirs(tau_dir)
+
+            # Plot the distribution functions over time
+            plt.figure(figsize=(12, 6))
+            for i in range(d2q9.DIRECTIONS):
+                plt.plot(f_hist[:, i], label=f'Direction {i}')
+            plt.title(f'Distribution Functions Over Time for Node {node} (tau={tau})')
+            plt.xlabel('Time Step')
+            plt.ylabel('f')
+            plt.legend()
+            plt.savefig(os.path.join(tau_dir, f'distribution_functions_node_{node}_tau_{tau}.png'))
+            plt.clf()
+
+            # Plot the density over time
+            plt.figure(figsize=(12, 6))
+            plt.plot(rho_hist, label='Density')
+            plt.title(f'Density Over Time for Node {node} (tau={tau})')
+            plt.xlabel('Time Step')
+            plt.ylabel('Density')
+            plt.legend()
+            plt.savefig(os.path.join(tau_dir, f'density_node_{node}_tau_{tau}.png'))
+            plt.clf()
+
+            # Plot the velocity components over time
+            plt.figure(figsize=(12, 6))
+            plt.plot(u_hist[:, 0], label='Velocity x-component')
+            plt.plot(u_hist[:, 1], label='Velocity y-component')
+            plt.title(f'Velocity Components Over Time for Node {node} (tau={tau})')
+            plt.xlabel('Time Step')
+            plt.ylabel('Velocity')
+            plt.legend()
+            plt.savefig(os.path.join(tau_dir, f'velocity_components_node_{node}_tau_{tau}.png'))
+            plt.clf()
+
 
 if __name__ == "__main__":
     main()
