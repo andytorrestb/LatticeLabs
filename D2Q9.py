@@ -40,7 +40,7 @@ class D2Q9(Lattice):
 
     CS = 1 / np.sqrt(3)  # Speed of sound in lattice units
 
-    def __init__(self):
+    def __init__(self, tau):
         """
         Initialize the D2Q9 class with lattice parameters.
 
@@ -54,6 +54,7 @@ class D2Q9(Lattice):
         self.cs = self.CS
         self.cs2 = self.cs**2  # Square of speed of sound
         self.compute_lattice_velocities()
+        self.tau = tau
 
     def compute_density(self, f):
         """
