@@ -84,11 +84,11 @@ class Simulation():
 
         results = []
 
+        u = self.computational_domain.u
+        rho = self.computational_domain.rho
         for t in range(time_steps):
-            self.update()
-
-            rho = self.computational_domain.rho
-            u = self.computational_domain.u
+            # self.update()
+            rho = rho + 1
             result = {"time": t, "density": rho, "velocity": u}
             results.append(result)
         return results

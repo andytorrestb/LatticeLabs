@@ -21,11 +21,11 @@ if __name__ == "__main__":
 
     # Initialize the simulation
     simulation = sim.Simulation(d2q9, cd)
-    results = simulation.run(100)
+    results = simulation.run(255)
 
-    print(results)
 
     # Post-process the results
     pp = PostProcessor.PostProcessor(results, simulation)
     pp.process()
+    # print(pp.rho)
 

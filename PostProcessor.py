@@ -47,7 +47,9 @@ class PostProcessor:
                 (self.simulation.computational_domain.ny, self.simulation.computational_domain.nx)
             ), 
             animated=True,
-            label = 'Velocity'
+            label = 'Velocity',
+            vmin = 0,
+            vmax = 255
         )
         
         x_min = 0
@@ -68,9 +70,10 @@ class PostProcessor:
 
         def update(frame):
             line.set_array(self.rho[frame])
+            print(self.rho[frame])
             return line,
 
-        ani = animation.FuncAnimation(fig, update, frames=len(self.t), init_func=init, blit=True)
+        ani = animation.FuncAnimation(fig, update, frames=len(self.t), init_func=init, blit=True, interval=30)
         ani.save(filename, writer='ffmpeg')
         
     def process(self):
