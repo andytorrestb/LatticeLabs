@@ -28,6 +28,7 @@ class Simulation():
 
         n_x = self.computational_domain.nx
         n_y = self.computational_domain.ny  
+        rho_in = self.computational_domain.rho_in
 
         x_max = n_x - 1
         y_min = n_y - 1
@@ -38,22 +39,110 @@ class Simulation():
                 ## Streaming
                 match [j, i]:
                     case [0, 0]: # Top left corner
-                        pass
+
+                        # Known PDF values.
+                        f_new[j, i, 0] = f[j, i, 0] 
+                        f_new[j, i, 2] = f[j+1, i, 2]
+                        f_new[j, i, 3] = f[j, i+1, 3]
+                        f_new[j, i, 6] = f[j+1, i+1, 6]
+
+                        # Hard coded solutions for Unknown PDF values.
+                        f_new[j, i, 1] = f[j, i, 3]
+                        f_new[j, i, 4] = f[j, i, 2]
+                        f_new[j, i, 5] = 0.5*(rho_in - f[j, i, 0]) - f[j, i, 2] - f[j, i, 3] - f[j, i, 6]
+                        f_new[j, i, 7] = f[j, i, 5]
+                        f_new[j, i, 8] = f[j, i, 6]
+
                     case [0, x_max]: # Top right corner
-                        pass
+                         # Apply zero gradient boundary condition.
+                        f_new[j, i, 0] = f[j, i-1, 0] 
+                        f_new[j, i, 1] = f[j, i-1, 1]
+                        f_new[j, i, 2] = f[j, i-1, 2]
+                        f_new[j, i, 3] = f[j, i-1, 3]
+                        f_new[j, i, 4] = f[j, i-1, 4]
+                        f_new[j, i, 5] = f[j, i-1, 5]
+                        f_new[j, i, 6] = f[j, i-1, 6]
+                        f_new[j, i, 7] = f[j, i-1, 7]
+                        f_new[j, i, 8] = f[j, i-1, 8]
                     case [0, _]: # Interior top surface
-                        pass
+                        # Known PDF values.
+                        f_new[j, i, 0] = f[j, i, 0] 
+                        f_new[j, i, 1] = f[j, i-1, 1]
+                        f_new[j, i, 2] = f[j+1, i, 2]
+                        f_new[j, i, 3] = f[j, i+1, 3]
+                        f_new[j, i, 5] = f[j+1, i-1, 5]
+                        f_new[j, i, 6] = f[j+1, i+1, 6]
+
+                        # Hard coded solutions for Unknown PDF values.
+                        f_new[j, i, 4] = f[j, i, 2]
+                        f_new[j, i, 7] = 0.5*(f[j, i, 1] - f[j, i, 3]) + f[j, i, 5]
+                        f_new[j, i, 8] = 0.5*(f[j, i, 3] - f[j, i, 1]) + f[j, i, 6]
                     case [y_min, 0]: # Bottom left corner
-                        pass
+                        # Known PDF values.
+                        f_new[j, i, 0] = f[j, i, 0] 
+                        f_new[j, i, 3] = f[j, i+1, 3]
+                        f_new[j, i, 4] = f[j-1, i, 4]
+                        f_new[j, i, 7] = f[j-1, i+1, 7]
+
+                        # Hard coded solutions for Unknown PDF values.
+                        f_new[j, i, 1] = f[j, i, 3]
+                        f_new[j, i, 2] = f[j, i, 4]
+                        f_new[j, i, 5] = f[j, i, 7]
+                        f_new[j, i, 6] = 0.5*(rho_in - f[j, i, 0]) - f[j, i, 3] - f[j, i, 4] - f[j, i, 7]
+                        f_new[j, i, 8] = f[j, i, 6]
+                        
                     case [y_min, x_max]: # Bottom right corner
+                         # Apply zero gradient boundary condition.
+                        f_new[j, i, 0] = f[j, i-1, 0] 
+                        f_new[j, i, 1] = f[j, i-1, 1]
+                        f_new[j, i, 2] = f[j, i-1, 2]
+                        f_new[j, i, 3] = f[j, i-1, 3]
+                        f_new[j, i, 4] = f[j, i-1, 4]
+                        f_new[j, i, 5] = f[j, i-1, 5]
+                        f_new[j, i, 6] = f[j, i-1, 6]
+                        f_new[j, i, 7] = f[j, i-1, 7]
+                        f_new[j, i, 8] = f[j, i-1, 8]
                         pass
                     case [y_min, _]: # Interior bottom surface
-                        pass
+                        # Simply stream data from neighboring nodes.
+                        f_new[j, i, 0] = f[j, i, 0] 
+                        f_new[j, i, 1] = f[j, i-1, 1]
+                        f_new[j, i, 3] = f[j, i+1, 3]
+                        f_new[j, i, 4] = f[j-1, i, 4]
+                        f_new[j, i, 7] = f[j-1, i+1, 7]
+                        f_new[j, i, 8] = f[j-1, i-1, 8]
+
+                        # Hard coded solutions for Unknown PDF values.
+                        f_new[j, i, 2] = f[j, i, 4]
+                        f_new[j, i, 5] = 0.5*(f[j, i, 3] - f[j, i, 1]) + f[j, i, 7]
+                        f_new[j, i, 6] = 0.5*(f[j, i, 1] - f[j, i, 3]) + f[j, i, 8]
                     case [_, 0]: # Left surface
-                        pass
+                        # Known PDF values.
+                        f_new[j, i, 0] = f[j, i, 0] 
+                        f_new[j, i, 2] = f[j+1, i, 2]
+                        f_new[j, i, 3] = f[j, i+1, 3]
+                        f_new[j, i, 4] = f[j-1, i, 4]
+                        f_new[j, i, 6] = f[j+1, i+1, 6]
+                        f_new[j, i, 7] = f[j-1, i+1, 7]
+
+                        # Hard coded solutions for Unknown PDF values.
+                        U_in = (f[j, i, 0] + f[j, i, 2] + f[j, i, 4] + 2*(f[j, i, 3] + f[j, i, 6] + f[j, i, 7])) / rho_in
+                        f_new[j, i, 1] = f[j, i, 3] + (2/3) * rho_in * U_in
+                        f_new[j, i, 5] = f[j, i, 7] + 0.5 * (f[j, i, 4] - f[j, i, 2]) + (1/6) * rho_in * U_in
+                        f_new[j, i, 8] = f[j, i, 6] - 0.5 * (f[j, i, 4] - f[j, i, 2]) + (1/6) * rho_in * U_in
                     case [_, x_max]: # Right surface
-                        pass
+                         # Apply zero gradient boundary condition.
+                        f_new[j, i, 0] = f[j, i-1, 0] 
+                        f_new[j, i, 1] = f[j, i-1, 1]
+                        f_new[j, i, 2] = f[j, i-1, 2]
+                        f_new[j, i, 3] = f[j, i-1, 3]
+                        f_new[j, i, 4] = f[j, i-1, 4]
+                        f_new[j, i, 5] = f[j, i-1, 5]
+                        f_new[j, i, 6] = f[j, i-1, 6]
+                        f_new[j, i, 7] = f[j, i-1, 7]
+                        f_new[j, i, 8] = f[j, i-1, 8]
                     case _: # Interior nodes
+                        # Simply stream data from neighboring nodes.
                         f_new[j, i, 0] = f[j, i, 0] 
                         f_new[j, i, 1] = f[j, i-1, 1]
                         f_new[j, i, 2] = f[j+1, i, 2]
@@ -64,12 +153,19 @@ class Simulation():
                         f_new[j, i, 7] = f[j-1, i+1, 7]
                         f_new[j, i, 8] = f[j-1, i-1, 8]
 
-                        # Collision
-                        rho = self.computational_domain.rho[j, i]
-                        u = self.computational_domain.u[j, i]
-                        self.computational_domain.f_eq[j, i] = self.lattice.compute_equilibrium(rho, u)
-                        self.computational_domain.f[j, i] = self.computational_domain.rho_in * self.lattice.weights
-                        self.computational_domain.rho[j, i] = np.sum(self.computational_domain.f[j, i]) + 1
+        # Collision
+        self.computational_domain.f = f_new - (f_new - self.computational_domain.f_eq) / self.lattice.tau
+    
+        # Update the macroscopic density and velocity fields post-collision.
+
+        ksi = self.lattice.LATTICE_VELOCITES
+        for j in range(n_y):
+            for i in range(n_x):
+        
+                self.computational_domain.rho[j, i] = np.sum(self.computational_domain.f[j, i])
+                self.computational_domain.u_x[j, i] = np.sum(f[j, i]*ksi[:, 0])/self.computational_domain.rho[j, i]
+                self.computational_domain.u_y[j, i] = np.sum(f[j, i]*ksi[:, 1])/self.computational_domain.rho[j, i]
+                self.computational_domain.u[j, i] = np.sqrt(self.computational_domain.u_x[j, i]**2 + self.computational_domain.u_y[j, i]**2)
 
         # print("Updating simulation...")
         
@@ -87,8 +183,9 @@ class Simulation():
         u = self.computational_domain.u
         rho = self.computational_domain.rho
         for t in range(time_steps):
-            # self.update()
-            rho = rho + 1
+            self.update()
+            rho = self.computational_domain.rho
+            u = self.computational_domain.u
             result = {"time": t, "density": rho, "velocity": u}
             results.append(result)
         return results

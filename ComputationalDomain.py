@@ -70,10 +70,12 @@ class PoiseuilleFlow(ComputationalDomain):
         # Initialize the density and velocity fields
         self.rho = np.ones((self.ny, self.nx)) * self.rho_in
         self.u = np.zeros((self.ny, self.nx, 2))
+        self.u_x = np.zeros((self.ny, self.nx))
+        self.u_y = np.zeros((self.ny, self.nx))
 
 
         # Initialize the equilibrium distribution
-        for j in range(self.ny):
-            for i in range(self.nx):
-                self.f_eq[j, i] = self.lattice.compute_equilibrium(self.rho[j, i], self.u[j, i])
-                # print(self.f_eq[j, i])
+        # for j in range(self.ny):
+        #     for i in range(self.nx):
+        #         self.f_eq[j, i] = self.lattice.compute_equilibrium(self.rho[j, i], self.u[j, i])
+        #         # print(self.f_eq[j, i])

@@ -7,7 +7,6 @@ class PostProcessor:
     def __init__(self, results, simulation):
         self.simulation = simulation
 
-
         self.results = results
         print(type(results))
 
@@ -17,7 +16,7 @@ class PostProcessor:
 
         for result in results:
             t.append(result["time"])
-            u.append(result["velocity"][0])
+            u.append(result["velocity"])
             rho.append(result["density"])
 
         self.t = np.array(t)
@@ -47,9 +46,9 @@ class PostProcessor:
                 (self.simulation.computational_domain.ny, self.simulation.computational_domain.nx)
             ), 
             animated=True,
-            label = 'Velocity',
-            vmin = 0,
-            vmax = 255
+            label = 'Density'
+            # vmin = 0,
+            # vmax = 255
         )
         
         x_min = 0
@@ -69,8 +68,8 @@ class PostProcessor:
             return line,
 
         def update(frame):
-            line.set_array(self.rho[frame])
-            print(self.rho[frame])
+            line.set_array(self.u[frame])
+            # print(self.rho[frame])
             return line,
 
         ani = animation.FuncAnimation(fig, update, frames=len(self.t), init_func=init, blit=True, interval=30)
@@ -78,4 +77,5 @@ class PostProcessor:
         
     def process(self):
         # do something with data
-        self.create_video()
+        # self.create_video()
+        print(self.u[-1])

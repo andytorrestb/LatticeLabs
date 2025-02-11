@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     # Initialize the simulation
     simulation = sim.Simulation(d2q9, cd)
-    results = simulation.run(255)
+    results = simulation.run(100)
 
 
     # Post-process the results
