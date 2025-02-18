@@ -7,7 +7,7 @@ n_y = int(n_x / 2)
 dx = 1.0
 dy = 1.0
 
-rho_in = 5.0
+rho_in = 1.0
 
 # Define LBM parameters
 
@@ -174,20 +174,25 @@ for t in range(T):
                     f_new[j, i, 6] = f[j+1, i+1, 6]
                     f_new[j, i, 7] = f[j-1, i+1, 7]
                     f_new[j, i, 8] = f[j-1, i-1, 8]
-        ## Collision
-        f = f_new - (f_new - f_eq) / tau
 
-        # Update macroscopic variables
-        rho = np.sum(f, axis=2)
-        print("ksi x", ksi[:, 0])
-        print("ksi y", ksi[:, 1])
+    ## Collision
+    for j in range(n_y):
+        for i in range(n_x):
+            f_eq[j, i] = compute_equilibrium(rho[j, i], u[j, i])
+
+    f = f_new - (f_new - f_eq) / tau
+
+    # Update macroscopic variables
+    rho = np.sum(f, axis=2)
+    # print("ksi x", ksi[:, 0])
+    # print("ksi y", ksi[:, 1])
 
 
-        u_x = np.dot(f, ksi[:, 0]) / rho
-        u_y = np.dot(f, ksi[:, 1]) / rho
-        print("f", f)
-        print("u_x", u_x)
-        print("u_y", u_y)
+    u_x = np.dot(f, ksi[:, 0]) / rho
+    u_y = np.dot(f, ksi[:, 1]) / rho
+        # print("f", f)
+        # print("u_x", u_x)
+        # print("u_y", u_y)
 # print(u_y)
 
 # Visualization
