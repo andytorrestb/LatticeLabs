@@ -1,7 +1,7 @@
-
+clear all;
 %% Define parameters
 % Domain
-N_x=100;
+N_x=50;
 N_y=50;
 dx=1;
 dy=1;
@@ -13,6 +13,7 @@ c_s=1/sqrt(3);
 Tau=1;
 %% Initialization
 Rho_in=1;
+U_x=0.1*c_s;
 Rho=ones(N_y,N_x)*Rho_in;
 u=zeros(N_y,N_x);
 v=zeros(N_y,N_x);
@@ -32,6 +33,7 @@ f_new=f;
 T=2000;
 %% Solving
 for t=1:T
+    disp(t)
     % Streaming
     for j=1:N_y
         for i=1:N_x
@@ -42,9 +44,10 @@ for t=1:T
                     f_new(j,i,4)=f(j,i+1,4);
                     f_new(j,i,7)=f(j+1,i+1,7);
 
+                    Rho_ji = (Rho(j+1,i) + Rho(j,i+1) + Rho(j+1,i+1)) / 3.0;
                     f_new(j,i,2)=f_new(j,i,4);
                     f_new(j,i,5)=f_new(j,i,3);
-                    f_new(j,i,6)=Rho_in/2-f_new(j,i,1)/2-f_new(j,i,3)-f_new(j,i,4)-f_new(j,i,7);
+                    f_new(j,i,6)=0.5*(Rho_ji - f_new(j,i,1) - 2*(f_new(j,i,3)+f_new(j,i,4)+f_new(j,i,7)));
                     f_new(j,i,8)=f_new(j,i,6);
                     f_new(j,i,9)=f_new(j,i,7);
                 elseif i==N_x % Top-Right corner
@@ -53,9 +56,10 @@ for t=1:T
                     f_new(j,i,3)=f(j+1,i,3);
                     f_new(j,i,6)=f(j+1,i-1,6);
 
+                    Rho_ji = (Rho(j+1,i) + Rho(j,i-1) + Rho(j+1,i-1)) / 3.0;
                     f_new(j,i,4)=f_new(j,i,2);
                     f_new(j,i,5)=f_new(j,i,3);
-                    f_new(j,i,7)=f_new(j,i-1,7);
+                    f_new(j,i,7)=0.5*(Rho_ji - f_new(j,i,1) - 2*(f_new(j,i,2)+f_new(j,i,3)+f_new(j,i,6)));
                     f_new(j,i,8)=f_new(j,i,6);
                     f_new(j,i,9)=f_new(j,i,7);
                 else % All other nodes on the top surface
@@ -66,9 +70,12 @@ for t=1:T
                     f_new(j,i,6)=f(j+1,i-1,6);
                     f_new(j,i,7)=f(j+1,i+1,7);
 
+                    % f_new(j,i,5)=f_new(j,i,3);
+                    % f_new(j,i,8)=0.5*(f_new(j,i,1)+f_new(j,i,3)+2*(f_new(j,i,3)+f_new(j,i,4)+f_new(j,i,7))-Rho_in*(U_x-1));
+                    % f_new(j,i,9)=0.5*(Rho_in*(U_x+1)+f_new(j,i,7)-f_new(j,i,1) -2*(f_new(j,i,2)+f_new(j,i,3)+f_new(j,i,6)));
                     f_new(j,i,5)=f_new(j,i,3);
-                    f_new(j,i,8)=(f_new(j,i,2)-f_new(j,i,4))/2+f_new(j,i,6);
-                    f_new(j,i,9)=(f_new(j,i,4)-f_new(j,i,2))/2+f_new(j,i,7);
+                    f_new(j,i,8)=f_new(j,i,6) + 0.5*(-1*Rho(j,i)*U_x + f_new(j,i,2) - f_new(j,i,4));
+                    f_new(j,i,9)=f_new(j,i,7) + 0.5*(Rho(j,i)*U_x + f_new(j,i,4) - f_new(j,i,2));
                 end
             elseif j==N_y % Bottom surface
                 if i==1 % Bottom-Left corner
@@ -77,10 +84,11 @@ for t=1:T
                     f_new(j,i,5)=f(j-1,i,5);
                     f_new(j,i,8)=f(j-1,i+1,8);
 
+                    Rho_ji = (Rho(j-1,i) + Rho(j,i+1) + Rho(j-1,i+1)) / 3.0;
                     f_new(j,i,2)=f_new(j,i,4);
                     f_new(j,i,3)=f_new(j,i,5);
                     f_new(j,i,6)=f_new(j,i,8);
-                    f_new(j,i,7)=Rho_in/2-f_new(j,i,1)/2-f_new(j,i,4)-f_new(j,i,5)-f_new(j,i,8);
+                    f_new(j,i,7)=0.5*(Rho_ji - f_new(j,i,1) - 2*(f_new(j,i,4)+f_new(j,i,5)+f_new(j,i,8)));
                     f_new(j,i,9)=f_new(j,i,7);
                 elseif i==N_x % Bottom-Right corner
                     f_new(j,i,1)=f(j,i,1);
@@ -88,9 +96,10 @@ for t=1:T
                     f_new(j,i,5)=f(j-1,i,5);
                     f_new(j,i,9)=f(j-1,i-1,9);
 
+                    Rho_ji = (Rho(j-1,i) + Rho(j,i-1) + Rho(j-1,i-1)) / 3.0;
                     f_new(j,i,3)=f_new(j,i,5);
                     f_new(j,i,4)=f_new(j,i,2);
-                    f_new(j,i,6)=f_new(j,i-1,6);
+                    f_new(j,i,6)=0.5*(Rho_in - f_new(j,i,1) - 2*(f_new(j,i,2)+f_new(j,i,5)+f_new(j,i,9)));
                     f_new(j,i,7)=f_new(j,i,9);
                     f_new(j,i,8)=f_new(j,i,6);
                 else % All other nodes on the bottom surface
@@ -113,10 +122,9 @@ for t=1:T
                 f_new(j,i,7)=f(j+1,i+1,7);
                 f_new(j,i,8)=f(j-1,i+1,8);
 
-                U_in=1-(f_new(j,i,1)+f_new(j,i,3)+f_new(j,i,5)+2*(f_new(j,i,4)+f_new(j,i,7)+f_new(j,i,8)))/Rho_in;
-                f_new(j,i,2)=f_new(j,i,4)+U_in*Rho_in*2/3;
-                f_new(j,i,6)=f_new(j,i,8)+(f_new(j,i,5)-f_new(j,i,3))/2+U_in*Rho_in/6;
-                f_new(j,i,9)=f_new(j,i,7)-(f_new(j,i,5)-f_new(j,i,3))/2+U_in*Rho_in/6;
+                f_new(j,i,2)=f_new(j,i,4);
+                f_new(j,i,6)=0.5*(f_new(j,i,5) - f_new(j,i,3) + 2*f_new(j,i,8));
+                f_new(j,i,9)=0.5*(f_new(j,i,3) - f_new(j,i,5) + 2*f_new(j,i,7));
             elseif i==N_x % Right surface
                 f_new(j,i,1)=f(j,i,1);
                 f_new(j,i,2)=f(j,i-1,2);
@@ -125,9 +133,9 @@ for t=1:T
                 f_new(j,i,6)=f(j+1,i-1,6);
                 f_new(j,i,9)=f(j-1,i-1,9);
 
-                f_new(j,i,4)=f_new(j,i-1,4);
-                f_new(j,i,7)=f_new(j,i-1,7);
-                f_new(j,i,8)=f_new(j,i-1,8);
+                f_new(j,i,4)=f_new(j,i,2);
+                f_new(j,i,7)=0.5*(f_new(j,i,5) - f_new(j,i,3) + 2*f_new(j,i,9));
+                f_new(j,i,8)=0.5*(f_new(j,i,3) - f_new(j,i,3) + 2*f_new(j,i,6));
             else % All interior nodes
                 f_new(j,i,1)=f(j,i,1);
                 f_new(j,i,2)=f(j,i-1,2);
@@ -162,18 +170,18 @@ end
 
 %% Visualization
 % Analytical Solution
-y_benchmark=0:0.01:1;
-for i=1:length(y_benchmark)
-    u_benchmark(i)=-4*(y_benchmark(i)^2-y_benchmark(i));
-end
-figure;
-plot(y_benchmark,u_benchmark,"red")
+%%y_benchmark=0:0.01:1;
+%%for i=1:length(y_benchmark)
+%%    u_benchmark(i)=-4*(y_benchmark(i)^2-y_benchmark(i));
+%%end
+%%figure;
+%%plot(y_benchmark,u_benchmark,"red")
 % Simultion result
-for j=1:N_y
-    u_sim(j)=u(j,N_x-1);
-end
-hold on
-plot((0:1:N_y-1)/(N_y-1),u_sim/max(u_sim),'blue');
+%%for j=1:N_y
+%%    u_sim(j)=u(j,N_x-1);
+%%end
+%%hold on
+%% plot((0:1:N_y-1)/(N_y-1),u_sim/max(u_sim),'blue');
 
 figure
 quiver(flipud(u),flipud(v),10)
