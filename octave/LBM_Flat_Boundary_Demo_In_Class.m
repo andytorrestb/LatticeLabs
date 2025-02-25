@@ -10,7 +10,7 @@ Ksi=[0 1 0 -1  0 1 -1  -1  1;...
      0 0 1  0 -1 1  1  -1 -1];
 w=[4/9 1/9 1/9 1/9 1/9 1/36 1/36 1/36 1/36];
 c_s=1/sqrt(3);
-Tau=1;
+Tau=0.58655;
 %% Initialization
 Rho_in=1;
 U_x=0.1*c_s;
@@ -30,7 +30,7 @@ for j=1:N_y
     end
 end
 f_new=f;
-T=2000;
+T=100;
 %% Solving
 for t=1:T
     disp(t)
@@ -168,20 +168,76 @@ for t=1:T
     f=f_new-1/Tau*(f_new-f_eq);
 end
 
-%% Visualization
-% Analytical Solution
-%%y_benchmark=0:0.01:1;
-%%for i=1:length(y_benchmark)
-%%    u_benchmark(i)=-4*(y_benchmark(i)^2-y_benchmark(i));
-%%end
-%%figure;
-%%plot(y_benchmark,u_benchmark,"red")
-% Simultion result
-%%for j=1:N_y
-%%    u_sim(j)=u(j,N_x-1);
-%%end
-%%hold on
-%% plot((0:1:N_y-1)/(N_y-1),u_sim/max(u_sim),'blue');
+
+% Visualization
+
+% Load experimental data
+% Define y* values
+y_star = [0, 0.0547, 0.0625, 0.0703, 0.1016, 0.1719, 0.2813, 0.4531, 0.5, 0.6172, 0.7344, 0.8516, 0.9531, 0.9609, 0.9688, 0.9766, 1];
+
+% Define u* values
+u_star = [0, -0.03717, -0.04192, -0.04775, -0.06434, -0.1015, -0.15662, -0.2109, -0.20581, -0.13641, 0.00332, 0.23151, 0.68717, 0.73722, 0.78871, 0.84123, 1];
+
+
+% Define x* values
+x_star = [0, 0.0625, 0.0703, 0.0781, 0.0938, 0.1563, 0.2266, 0.2344, 0.5, ...
+         0.8047, 0.8594, 0.9063, 0.9453, 0.9531, 0.9609, 0.9688, 1];
+% Define the v* values
+v_star = [0, 0.09233, 0.10091, 0.1089, 0.12317, 0.16077, 0.17507, 0.17527, ...
+         0.05454, -0.24533, -0.22445, -0.16914, -0.10313, -0.08864, -0.07391, -0.05906, 0];
+
+
+% Sample simulation data
+u_min = min(u);
+v_min = min(v);
+u_range = range(u);
+v_range = range(v);
+
+u_norm_sim = zeros(N_y, N_x);
+v_norm_sim = zeros(N_y, N_x);
+
+for j=1:N_y
+  for i=1:N_x
+
+    u_norm_sim(j,i) = (u(j,i)-u_min)/u_range;
+    v_norm_sim(j,i) = (v(j,i) - v_min)/v_range;
+
+  endfor
+endfor
+
+%u_norm_sim = (u-u_min)/u_range
+%v_norm_sim = (v-v_min)/v_range
+
+disp('u_norm_sim')
+disp(size(u_norm_sim(25,:)))
+disp(u_norm_sim(:, 25))
+%disp(u_norm_sim)
+
+disp('u')
+disp(size(u))
+
+
+
+x_star_sim = linspace(0, 1, N_x);
+y_star_sim = linspace(0, 1, N_y);
+
+
+% Graphs the comparison
+figure
+title("v* vs x*")
+ylabel("v*")
+xlabel("x*")
+scatter(x_star, v_star, mkr=".")
+plot(x_star_sim, v_norm_sim(25, :))
+
+figure
+title("u* vs y*")
+ylabel("y*")
+xlabel("x*")
+scatter(u_star,y_star,mkr=".")
+plot(u_norm_sim(25, :), y_star_sim)
+
+
 
 figure
 quiver(flipud(u),flipud(v),10)
