@@ -1,0 +1,41 @@
+---------------------------------------------
+|        Lid-Driven Cavity Flow (LBM)       |
+---------------------------------------------
+|                                           |
+|   u ≠ 0 (Moving Lid) --->                 |
+| ---------------------------------------   |
+| |                                     |   |
+| |                                     |   |
+| |                                     |   |
+| |                                     |   |
+| |                                     |   |
+| ---------------------------------------   |
+|   u = 0 (Stationary Walls)                |
+---------------------------------------------
+```
+
+1. Initialize Parameters
+   - Define grid size (N_x, N_y)
+   - Set LBM parameters (Ksi, w, c_s, Tau)
+   - Initialize density (Rho), velocities (u, v), and distribution function (f_eq, f)
+
+2. Main Simulation Loop
+   - **Streaming Step** (Propagate distribution function `f` to neighboring nodes)
+    -**Apply boundary conditions** for walls and moving lid.
+   - **Collision Step**
+     - **Compute macroscopic variables** (Rho, u, v)
+     - **Update equilibrium distribution function (f_eq)**
+     - **Apply BGK collision model**: 
+       
+       ```
+       f = f_new - (1/Tau) * (f_new - f_eq)
+       ```
+
+3. **Post-Processing and Visualization**
+   - Normalize velocity fields
+   - Compare with experimental data
+   - Plot:
+     - v* vs x* (vertical velocity vs. position)
+     - u* vs y* (horizontal velocity vs. position)
+     - Quiver plot of velocity vectors
+     - Contour plot of density distribution

@@ -2,7 +2,7 @@ clear all;
 %% Define parameters
 % Domain
 N_x=100;
-N_y=100;
+N_y=N_x;
 dx=1;
 dy=1;
 % LBM related
@@ -30,7 +30,7 @@ for j=1:N_y
     end
 end
 f_new=f;
-T=100;
+T=10000;
 %% Solving
 for t=1:T
     disp(t)
@@ -73,6 +73,8 @@ for t=1:T
                     % f_new(j,i,5)=f_new(j,i,3);
                     % f_new(j,i,8)=0.5*(f_new(j,i,1)+f_new(j,i,3)+2*(f_new(j,i,3)+f_new(j,i,4)+f_new(j,i,7))-Rho_in*(U_x-1));
                     % f_new(j,i,9)=0.5*(Rho_in*(U_x+1)+f_new(j,i,7)-f_new(j,i,1) -2*(f_new(j,i,2)+f_new(j,i,3)+f_new(j,i,6)));
+
+                    Rho(j,i) = f_new(j,i,1)+f_new(j,i,2)+f_new(j,i,4)+2*(f_new(j,i,3)+f_new(j,i,6)+f_new(j,i,7));
                     f_new(j,i,5)=f_new(j,i,3);
                     f_new(j,i,8)=f_new(j,i,6) + 0.5*(-1*Rho(j,i)*U_x + f_new(j,i,2) - f_new(j,i,4));
                     f_new(j,i,9)=f_new(j,i,7) + 0.5*(Rho(j,i)*U_x + f_new(j,i,4) - f_new(j,i,2));
@@ -99,7 +101,7 @@ for t=1:T
                     Rho_ji = (Rho(j-1,i) + Rho(j,i-1) + Rho(j-1,i-1)) / 3.0;
                     f_new(j,i,3)=f_new(j,i,5);
                     f_new(j,i,4)=f_new(j,i,2);
-                    f_new(j,i,6)=0.5*(Rho_in - f_new(j,i,1) - 2*(f_new(j,i,2)+f_new(j,i,5)+f_new(j,i,9)));
+                    f_new(j,i,6)=0.5*(Rho_ji - f_new(j,i,1) - 2*(f_new(j,i,2)+f_new(j,i,5)+f_new(j,i,9)));
                     f_new(j,i,7)=f_new(j,i,9);
                     f_new(j,i,8)=f_new(j,i,6);
                 else % All other nodes on the bottom surface
@@ -135,7 +137,7 @@ for t=1:T
 
                 f_new(j,i,4)=f_new(j,i,2);
                 f_new(j,i,7)=0.5*(f_new(j,i,5) - f_new(j,i,3) + 2*f_new(j,i,9));
-                f_new(j,i,8)=0.5*(f_new(j,i,3) - f_new(j,i,3) + 2*f_new(j,i,6));
+                f_new(j,i,8)=0.5*(f_new(j,i,3) - f_new(j,i,5) + 2*f_new(j,i,6));
             else % All interior nodes
                 f_new(j,i,1)=f(j,i,1);
                 f_new(j,i,2)=f(j,i-1,2);
@@ -188,19 +190,21 @@ v_star = [0, 0.09233, 0.10091, 0.1089, 0.12317, 0.16077, 0.17507, 0.17527, ...
 
 
 % Sample simulation data
-u_min = min(u);
-v_min = min(v);
-u_range = range(u);
-v_range = range(v);
+u_min = min(min(u));
+v_min = min(min(v));
+u_range = max(max(u)) - min(min(u));
+v_range = max(max(v)) - min(min(v));
+disp(u_range);
+disp(u_min);
+%blah = input('stop')
 
 u_norm_sim = zeros(N_y, N_x);
 v_norm_sim = zeros(N_y, N_x);
 
 for j=1:N_y
   for i=1:N_x
-
-    u_norm_sim(j,i) = (u(j,i)-u_min)/u_range;
-    v_norm_sim(j,i) = (v(j,i) - v_min)/v_range;
+    u_norm_sim(j,i) = (u(j,i)-u_min)/U_x;
+    v_norm_sim(j,i) = (v(j,i) - v_min)/U_x;
 
   endfor
 endfor
@@ -233,7 +237,7 @@ scatter(x_star, v_star, mkr=".")
 hold off
 
 figure
-plot(u_norm_sim(sample_index, :), y_star_sim)
+plot(u_norm_sim(:, sample_index), y_star_sim)
 hold on
 title("u* vs y*")
 ylabel("y*")
@@ -242,11 +246,12 @@ scatter(u_star,y_star,mkr=".")
 hold off
 
 
-
 figure
 quiver(flipud(u),flipud(v),10)
 axis equal tight
 
 figure
-contourf(Rho,30)
+contourf(flipud(Rho),30)
 axis equal tight
+
+% csvwrite('u_norm_sim', u_norm_sim)

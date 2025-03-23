@@ -1,7 +1,8 @@
 import numpy as np
 
 # Parameters
-N_x, N_y = 100, 50
+N_x = 100
+N_y = 50
 dx, dy = 1, 1
 Ksi = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                 [0, 0, 1, 0, -1, 1, 1, -1, -1]])
@@ -24,10 +25,11 @@ for j in range(N_y):
             f_eq[j, i, k] = w[k] * rho[j, i] * (1 + vel / c_s**2 + vel**2 / (2*c_s**4) - (u[j, i]**2 + v[j, i]**2) / (2*c_s**2))
             f[j, i, k] = rho_in * w[k]
 
-f_new = np.copy(f)
+f_new = np.zeros((N_y, N_x, 9))
 
-T = 2000
+T = 20000
 for t in range(T):
+    print('Time step:', t)
     # Streaming
     for j in range(N_y):
         for i in range(N_x):
@@ -159,13 +161,41 @@ for t in range(T):
 
 
 
-# Visualization
+
+import numpy as np
 import matplotlib.pyplot as plt
 
-# Visualization
-X, Y = np.meshgrid(np.arange(N_x), np.arange(N_y))
-plt.quiver(X, Y, u, v, scale=0.1)
-plt.title('Velocity field')
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.savefig('velocity_plot.png')
+# Benchmark calculation
+y_benchmark = np.arange(0, 1.01, 0.01)
+u_benchmark = -4 * (y_benchmark**2 - y_benchmark)
+
+# Plot benchmark result
+plt.figure()
+plt.plot(y_benchmark, u_benchmark, "r", label="Benchmark")
+
+# Simulation result (assuming u and N_x are defined)
+u_sim = np.zeros(N_y-1)  # Placeholder for actual u_sim computation
+print(u.shape)
+print(N_y)
+for j in range(N_y-1):
+    print(j)
+    u_sim[j] = u[j, N_x - 1]  # Ensure u and N_x are defined
+
+plt.plot(np.linspace(0, 1, N_y-1), u_sim / np.max(u_sim), "b", label="Simulation")
+plt.legend()
+plt.savefig('velocity_profile.png')
+
+# Quiver plot (assuming u and v are defined)
+plt.figure()
+plt.quiver(np.flipud(u), np.flipud(v), scale=10)
+plt.axis("equal")
+plt.axis("tight")
+plt.savefig('velocity.png')
+
+# Contour plot (assuming Rho is defined)
+plt.figure()
+plt.contourf(rho, levels=30)
+plt.axis("equal")
+plt.axis("tight")
+plt.colorbar()
+plt.savefig('density.png')

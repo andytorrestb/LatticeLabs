@@ -2,7 +2,7 @@ clear all;
 %% Define parameters
 % Domain
 N_x=100;
-N_y=100;
+N_y=N_x;
 dx=1;
 dy=1;
 % LBM related
@@ -30,7 +30,7 @@ for j=1:N_y
     end
 end
 f_new=f;
-T=100;
+T=10000;
 %% Solving
 for t=1:T
     disp(t)
@@ -188,17 +188,19 @@ v_star = [0, 0.09233, 0.10091, 0.1089, 0.12317, 0.16077, 0.17507, 0.17527, ...
 
 
 % Sample simulation data
-u_min = min(u);
-v_min = min(v);
-u_range = range(u);
-v_range = range(v);
+u_min = min(min(u));
+v_min = min(min(v));
+u_range = max(max(u)) - min(min(u));
+v_range = max(max(v)) - min(min(v));
+disp(u_range);
+disp(u_min);
+%blah = input('stop')
 
 u_norm_sim = zeros(N_y, N_x);
 v_norm_sim = zeros(N_y, N_x);
 
 for j=1:N_y
   for i=1:N_x
-
     u_norm_sim(j,i) = (u(j,i)-u_min)/u_range;
     v_norm_sim(j,i) = (v(j,i) - v_min)/v_range;
 
@@ -233,14 +235,13 @@ scatter(x_star, v_star, mkr=".")
 hold off
 
 figure
-plot(u_norm_sim(sample_index, :), y_star_sim)
+plot(u_norm_sim(:, sample_index), y_star_sim)
 hold on
 title("u* vs y*")
 ylabel("y*")
 xlabel("x*")
 scatter(u_star,y_star,mkr=".")
 hold off
-
 
 
 figure
@@ -250,3 +251,5 @@ axis equal tight
 figure
 contourf(Rho,30)
 axis equal tight
+
+csvwrite('u_norm_sim', u_norm_sim)

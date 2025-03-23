@@ -1,8 +1,8 @@
 clear all;
 %% Define parameters
 % Domain
-N_x=100;
-N_y=100;
+N_x=101;
+N_y=N_x;
 dx=1;
 dy=1;
 % LBM related
@@ -10,7 +10,7 @@ Ksi=[0 1 0 -1  0 1 -1  -1  1;...
      0 0 1  0 -1 1  1  -1 -1];
 w=[4/9 1/9 1/9 1/9 1/9 1/36 1/36 1/36 1/36];
 c_s=1/sqrt(3);
-Tau=0.58655;
+Tau=0.67321;
 %% Initialization
 Rho_in=1;
 U_x=0.1*c_s;
@@ -30,16 +30,16 @@ for j=1:N_y
     end
 end
 f_new=f;
-T=100;
+T=20000;
 %% Solving
 for t=1:T
-    disp(t)
+    % disp(t)
     % Streaming
     for j=1:N_y
         for i=1:N_x
             if j==1 % Top surface
                 if i==1 % Top-Left corner
-                    f_new(j,i,1)=f(j,i,1);
+                    f_new(j,i,1)=f(j,i,1);T
                     f_new(j,i,3)=f(j+1,i,3);
                     f_new(j,i,4)=f(j,i+1,4);
                     f_new(j,i,7)=f(j+1,i+1,7);
@@ -73,6 +73,8 @@ for t=1:T
                     % f_new(j,i,5)=f_new(j,i,3);
                     % f_new(j,i,8)=0.5*(f_new(j,i,1)+f_new(j,i,3)+2*(f_new(j,i,3)+f_new(j,i,4)+f_new(j,i,7))-Rho_in*(U_x-1));
                     % f_new(j,i,9)=0.5*(Rho_in*(U_x+1)+f_new(j,i,7)-f_new(j,i,1) -2*(f_new(j,i,2)+f_new(j,i,3)+f_new(j,i,6)));
+
+                    Rho(j,i) = f_new(j,i,1)+f_new(j,i,2)+f_new(j,i,4)+2*(f_new(j,i,3)+f_new(j,i,6)+f_new(j,i,7));
                     f_new(j,i,5)=f_new(j,i,3);
                     f_new(j,i,8)=f_new(j,i,6) + 0.5*(-1*Rho(j,i)*U_x + f_new(j,i,2) - f_new(j,i,4));
                     f_new(j,i,9)=f_new(j,i,7) + 0.5*(Rho(j,i)*U_x + f_new(j,i,4) - f_new(j,i,2));
@@ -99,7 +101,7 @@ for t=1:T
                     Rho_ji = (Rho(j-1,i) + Rho(j,i-1) + Rho(j-1,i-1)) / 3.0;
                     f_new(j,i,3)=f_new(j,i,5);
                     f_new(j,i,4)=f_new(j,i,2);
-                    f_new(j,i,6)=0.5*(Rho_in - f_new(j,i,1) - 2*(f_new(j,i,2)+f_new(j,i,5)+f_new(j,i,9)));
+                    f_new(j,i,6)=0.5*(Rho_ji - f_new(j,i,1) - 2*(f_new(j,i,2)+f_new(j,i,5)+f_new(j,i,9)));
                     f_new(j,i,7)=f_new(j,i,9);
                     f_new(j,i,8)=f_new(j,i,6);
                 else % All other nodes on the bottom surface
@@ -135,7 +137,7 @@ for t=1:T
 
                 f_new(j,i,4)=f_new(j,i,2);
                 f_new(j,i,7)=0.5*(f_new(j,i,5) - f_new(j,i,3) + 2*f_new(j,i,9));
-                f_new(j,i,8)=0.5*(f_new(j,i,3) - f_new(j,i,3) + 2*f_new(j,i,6));
+                f_new(j,i,8)=0.5*(f_new(j,i,3) - f_new(j,i,5) + 2*f_new(j,i,6));
             else % All interior nodes
                 f_new(j,i,1)=f(j,i,1);
                 f_new(j,i,2)=f(j,i-1,2);
@@ -188,32 +190,33 @@ v_star = [0, 0.09233, 0.10091, 0.1089, 0.12317, 0.16077, 0.17507, 0.17527, ...
 
 
 % Sample simulation data
-u_min = min(u);
-v_min = min(v);
-u_range = range(u);
-v_range = range(v);
+u_min = min(min(u));
+v_min = min(min(v));
+u_range = max(max(u)) - min(min(u));
+v_range = max(max(v)) - min(min(v));
+disp(u_range);
+disp(u_min);
+%blah = input('stop')
 
 u_norm_sim = zeros(N_y, N_x);
 v_norm_sim = zeros(N_y, N_x);
 
 for j=1:N_y
   for i=1:N_x
+    u_norm_sim(j,i) = u(j,i)/U_x;
+    v_norm_sim(j,i) = v(j,i)/U_x;
+  end
+end
 
-    u_norm_sim(j,i) = (u(j,i)-u_min)/u_range;
-    v_norm_sim(j,i) = (v(j,i) - v_min)/v_range;
-
-  endfor
-endfor
-
-%u_norm_sim = (u-u_min)/u_range
-%v_norm_sim = (v-v_min)/v_range
-disp('u_norm_sim')
-disp(size(u_norm_sim(25,:)))
-disp(u_norm_sim(:, 25))
-%disp(u_norm_sim)
-
-disp('u')
-disp(size(u))
+% u_norm_sim = (u-u_min)/u_range
+% v_norm_sim = (v-v_min)/v_range
+% disp('u_norm_sim')
+% disp(size(u_norm_sim(25,:)))
+% disp(u_norm_sim(:, 25))
+% disp(u_norm_sim)
+% 
+% disp('u')
+% disp(size(u))
 
 
 x_star_sim = linspace(0, 1, N_x);
@@ -221,26 +224,26 @@ y_star_sim = linspace(0, 1, N_y);
 
 
 % Graphs the comparison
-sample_index = int64(N_x / 2.0)
+% sample_index = int64(N_x / 2.0)
+sample_index = 51;
 
 figure
-plot(x_star_sim, v_norm_sim(sample_index, :))
+plot(x_star_sim, flipud(v_norm_sim(sample_index, :)))
 hold on
 title("v* vs x*")
 ylabel("v*")
 xlabel("x*")
-scatter(x_star, v_star, mkr=".")
+scatter(x_star, v_star)
 hold off
 
 figure
-plot(u_norm_sim(sample_index, :), y_star_sim)
+plot(flipud(u_norm_sim(:, sample_index)), y_star_sim)
 hold on
 title("u* vs y*")
 ylabel("y*")
 xlabel("x*")
-scatter(u_star,y_star,mkr=".")
+scatter(u_star,y_star)
 hold off
-
 
 
 figure
@@ -248,5 +251,7 @@ quiver(flipud(u),flipud(v),10)
 axis equal tight
 
 figure
-contourf(Rho,30)
+contourf(flipud(Rho),30)
 axis equal tight
+
+% csvwrite('u_norm_sim', u_norm_sim)
