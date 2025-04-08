@@ -99,7 +99,7 @@ end
 f=f_eq;
 f_new=f;
 
-T=5000;
+T=10000;
 %% Solving
 for t=1:T
     disp(t)
@@ -123,14 +123,19 @@ for t=1:T
                     y2=y(j);
                     C_w=find_the_wall_point(x1,y1,x2,y2,R,x_circ,y_circ);
                     delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+
+                    u_ff = u(j,i-1);
+                    v_ff = v(j,i-1);
+
                     if delta>=0.5
                         Chi=(2*delta-1)/Tau;
                         u_bf=(delta-1)*u(j,i)/delta;
                         v_bf=(delta-1)*v(j,i)/delta;
                     else
                         Chi=(2*delta-1)/(Tau-2);
-                        u_bf=u(j,i);
-                        v_bf=v(j,i);
+                        %% u_bf = u_ff (fluid node instead of the boundary node).
+                        u_bf=u_ff;
+                        v_bf=v_ff;
                     end
                     f_star=w(2)*Rho(j,i)*(1+[u_bf,v_bf]*Ksi(:,2)/c_s^2+([u(j,i),v(j,i)]*Ksi(:,2))^2/(2*c_s^4)-(u(j,i)^2+v(j,i)^2)/(2*c_s^2));
                     f_new(j,i,4)=(1-Chi)*f(j,i,2)+Chi*f_star;
@@ -146,14 +151,20 @@ for t=1:T
                     y2=y(j);
                     C_w=find_the_wall_point(x1,y1,x2,y2,R,x_circ,y_circ);
                     delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+                    
+                    %% fluid-fluid node
+                    u_ff = u(j+1,i);
+                    v_ff = v(j+1,i);
+
                     if delta>=0.5
                         Chi=(2*delta-1)/Tau;
                         u_bf=(delta-1)*u(j,i)/delta;
                         v_bf=(delta-1)*v(j,i)/delta;
                     else
                         Chi=(2*delta-1)/(Tau-2);
-                        u_bf=u(j,i);
-                        v_bf=v(j,i);
+                        %% u_bf = u_ff (fluid node instead of the boundary node).
+                        u_bf=u_ff;
+                        v_bf=v_ff;
                     end
                     f_star=w(3)*Rho(j,i)*(1+[u_bf,v_bf]*Ksi(:,3)/c_s^2+([u(j,i),v(j,i)]*Ksi(:,3))^2/(2*c_s^4)-(u(j,i)^2+v(j,i)^2)/(2*c_s^2));
                     f_new(j,i,5)=(1-Chi)*f(j,i,3)+Chi*f_star;
@@ -169,14 +180,20 @@ for t=1:T
                     y2=y(j);
                     C_w=find_the_wall_point(x1,y1,x2,y2,R,x_circ,y_circ);
                     delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+                    
+                    %% fluid-fluid node
+                    u_ff = u(j,i+1);
+                    v_ff = v(j,i+1);
+
                     if delta>=0.5
                         Chi=(2*delta-1)/Tau;
                         u_bf=(delta-1)*u(j,i)/delta;
                         v_bf=(delta-1)*v(j,i)/delta;
                     else
                         Chi=(2*delta-1)/(Tau-2);
-                        u_bf=u(j,i);
-                        v_bf=v(j,i);
+                        %% u_bf = u_ff (fluid node instead of the boundary node).
+                        u_bf=u_ff;
+                        v_bf=v_ff;
                     end
                     f_star=w(4)*Rho(j,i)*(1+[u_bf,v_bf]*Ksi(:,4)/c_s^2+([u(j,i),v(j,i)]*Ksi(:,4))^2/(2*c_s^4)-(u(j,i)^2+v(j,i)^2)/(2*c_s^2));
                     f_new(j,i,2)=(1-Chi)*f(j,i,4)+Chi*f_star;
@@ -192,14 +209,20 @@ for t=1:T
                     y2=y(j);
                     C_w=find_the_wall_point(x1,y1,x2,y2,R,x_circ,y_circ);
                     delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+                    
+                    %% fluid-fluid node
+                    u_ff = u(j-1,i);
+                    v_ff = v(j-1,i);
+
                     if delta>=0.5
                         Chi=(2*delta-1)/Tau;
                         u_bf=(delta-1)*u(j,i)/delta;
                         v_bf=(delta-1)*v(j,i)/delta;
                     else
                         Chi=(2*delta-1)/(Tau-2);
-                        u_bf=u(j,i);
-                        v_bf=v(j,i);
+                        %% u_bf = u_ff (fluid node instead of the boundary node).
+                        u_bf=u_ff;
+                        v_bf=v_ff;
                     end
                     f_star=w(5)*Rho(j,i)*(1+[u_bf,v_bf]*Ksi(:,5)/c_s^2+([u(j,i),v(j,i)]*Ksi(:,5))^2/(2*c_s^4)-(u(j,i)^2+v(j,i)^2)/(2*c_s^2));
                     f_new(j,i,3)=(1-Chi)*f(j,i,5)+Chi*f_star;
@@ -215,14 +238,20 @@ for t=1:T
                     y2=y(j);
                     C_w=find_the_wall_point(x1,y1,x2,y2,R,x_circ,y_circ);
                     delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+                    
+                    %% fluid-fluid node
+                    u_ff = u(j+1,i-1);
+                    v_ff = v(j+1,i-1);
+
                     if delta>=0.5
                         Chi=(2*delta-1)/Tau;
                         u_bf=(delta-1)*u(j,i)/delta;
                         v_bf=(delta-1)*v(j,i)/delta;
                     else
                         Chi=(2*delta-1)/(Tau-2);
-                        u_bf=u(j,i);
-                        v_bf=v(j,i);
+                        %% u_bf = u_ff (fluid node instead of the boundary node).
+                        u_bf=u_ff;
+                        v_bf=v_ff;
                     end
                     f_star=w(6)*Rho(j,i)*(1+[u_bf,v_bf]*Ksi(:,6)/c_s^2+([u(j,i),v(j,i)]*Ksi(:,6))^2/(2*c_s^4)-(u(j,i)^2+v(j,i)^2)/(2*c_s^2));
                     f_new(j,i,8)=(1-Chi)*f(j,i,6)+Chi*f_star;
@@ -238,14 +267,20 @@ for t=1:T
                     y2=y(j);
                     C_w=find_the_wall_point(x1,y1,x2,y2,R,x_circ,y_circ);
                     delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+                    
+                    %% fluid-fluid node
+                    u_ff = u(j+1,i+1);
+                    v_ff = v(j+1,i+1);
+
                     if delta>=0.5
                         Chi=(2*delta-1)/Tau;
                         u_bf=(delta-1)*u(j,i)/delta;
                         v_bf=(delta-1)*v(j,i)/delta;
                     else
                         Chi=(2*delta-1)/(Tau-2);
-                        u_bf=u(j,i);
-                        v_bf=v(j,i);
+                        %% u_bf = u_ff (fluid node instead of the boundary node).
+                        u_bf=u_ff;
+                        v_bf=v_ff;
                     end
                     f_star=w(7)*Rho(j,i)*(1+[u_bf,v_bf]*Ksi(:,7)/c_s^2+([u(j,i),v(j,i)]*Ksi(:,7))^2/(2*c_s^4)-(u(j,i)^2+v(j,i)^2)/(2*c_s^2));
                     f_new(j,i,9)=(1-Chi)*f(j,i,7)+Chi*f_star;
@@ -261,14 +296,20 @@ for t=1:T
                     y2=y(j);
                     C_w=find_the_wall_point(x1,y1,x2,y2,R,x_circ,y_circ);
                     delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+                    
+                    %% fluid-fluid node
+                    u_ff = u(j-1,i+1);
+                    v_ff = v(j-1,i+1);
+
                     if delta>=0.5
                         Chi=(2*delta-1)/Tau;
                         u_bf=(delta-1)*u(j,i)/delta;
                         v_bf=(delta-1)*v(j,i)/delta;
                     else
                         Chi=(2*delta-1)/(Tau-2);
-                        u_bf=u(j,i);
-                        v_bf=v(j,i);
+                        %% u_bf = u_ff (fluid node instead of the boundary node).
+                        u_bf=u_ff;
+                        v_bf=v_ff;
                     end
                     f_star=w(8)*Rho(j,i)*(1+[u_bf,v_bf]*Ksi(:,8)/c_s^2+([u(j,i),v(j,i)]*Ksi(:,8))^2/(2*c_s^4)-(u(j,i)^2+v(j,i)^2)/(2*c_s^2));
                     f_new(j,i,6)=(1-Chi)*f(j,i,8)+Chi*f_star;
@@ -284,14 +325,20 @@ for t=1:T
                     y2=y(j);
                     C_w=find_the_wall_point(x1,y1,x2,y2,R,x_circ,y_circ);
                     delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+                    
+                    %% fluid-fluid node
+                    u_ff = u(j-1,i-1);
+                    v_ff = v(j-1,i-1);
+
                     if delta>=0.5
                         Chi=(2*delta-1)/Tau;
                         u_bf=(delta-1)*u(j,i)/delta;
                         v_bf=(delta-1)*v(j,i)/delta;
                     else
                         Chi=(2*delta-1)/(Tau-2);
-                        u_bf=u(j,i);
-                        v_bf=v(j,i);
+                        %% u_bf = u_ff (fluid node instead of the boundary node).
+                        u_bf=u_ff;
+                        v_bf=v_ff;
                     end
                     f_star=w(9)*Rho(j,i)*(1+[u_bf,v_bf]*Ksi(:,9)/c_s^2+([u(j,i),v(j,i)]*Ksi(:,9))^2/(2*c_s^4)-(u(j,i)^2+v(j,i)^2)/(2*c_s^2));
                     f_new(j,i,7)=(1-Chi)*f(j,i,9)+Chi*f_star;
@@ -437,23 +484,23 @@ end
 
 %% Visualization
 figure;
-contourf(flipud(Zone_ID==2),30)
-title("Zone_ID==2")
-axis equal tight
-
-figure;
-contourf(flipud(Zone_ID==1),30)
-title("Zone_ID==1")
-axis equal tight
+% contourf(flipud(Zone_ID==2),30)
+% title("Zone_ID==2")
+% axis equal tight
+% 
+% figure;
+% contourf(flipud(Zone_ID==1),30)
+% title("Zone_ID==1")
+% axis equal tight
 
 figure;
 quiver(flipud(u),flipud(v),10)
-title("Velocity Plot")
+title("Velocity Plot (MLS)")
 axis equal tight
 
 figure;
 contourf(Rho,30)
-title("Density Plot")
+title("Density Plot (MLS)")
 axis equal tight
 
 dt = datetime('now', 'TimeZone', 'UTC');

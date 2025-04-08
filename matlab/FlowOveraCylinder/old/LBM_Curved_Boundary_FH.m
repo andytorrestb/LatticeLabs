@@ -99,7 +99,7 @@ end
 f=f_eq;
 f_new=f;
 
-T=5000;
+T=10000;
 %% Solving
 for t=1:T
     disp(t)
@@ -436,24 +436,24 @@ for t=1:T
 end
 
 %% Visualization
-figure;
-contourf(flipud(Zone_ID==2),30)
-title("Zone_ID==2")
-axis equal tight
-
-figure;
-contourf(flipud(Zone_ID==1),30)
-title("Zone_ID==1")
-axis equal tight
+% figure;
+% contourf(flipud(Zone_ID==2),30)
+% title("Zone_ID==2")
+% axis equal tight
+% 
+% figure;
+% contourf(flipud(Zone_ID==1),30)
+% title("Zone_ID==1")
+% axis equal tight
 
 figure;
 quiver(flipud(u),flipud(v),10)
-title("Velocity Plot")
+title("Velocity Plot (FH)")
 axis equal tight
 
 figure;
 contourf(Rho,30)
-title("Density Plot")
+title("Density Plot (FH)")
 axis equal tight
 
 dt = datetime('now', 'TimeZone', 'UTC');

@@ -32,6 +32,8 @@ Ksi=[0 1 0 -1  0 1 -1  -1  1;...
      0 0 1  0 -1 1  1  -1 -1];
 w=[4/9 1/9 1/9 1/9 1/9 1/36 1/36 1/36 1/36];
 c_s=1/sqrt(3);
+c_s_2 = c_s*c_s;
+c_s_4 = c_s_2*c_s_2;
 U_in=0.1*c_s;
 Re=20;
 Tau=0.5+(U_in*D)/(Re*c_s*c_s);
@@ -108,9 +110,8 @@ end
 f=f_eq;
 f_new=f;
 
-T=200;
-u_t = zeros(N_y, N_x, T);
-v_t = zeros(N_y, N_x, T);
+T=10000;
+
 %% Solving
 for t=1:T
     disp(t)
@@ -157,14 +158,17 @@ for t=1:T
                     % Calculate the boundary node velocity using GZS scheme.
                     f_non_eq = f_new(j,i,2) - f_eq(j,i,2);
                     if delta>=0.75
-                        u_ff=u_b1;
-                        v_ff=v_b1;
+                        u_b=u_b1;
+                        v_b=v_b1;
                     else
-                        u_ff=delta*u_b1+(1-delta)*u_b2;
-                        v_ff=delta*v_b1+(1-delta)*v_b2;
+                        u_b=delta*u_b1+(1-delta)*u_b2;
+                        v_b=delta*v_b1+(1-delta)*v_b2;
                         f_non_eq = delta*f_non_eq+(1-delta)*f_non_eq;
                     end
-                    f_new(j,i,4)=f_eq(j,i,2) + (1 - (1/Tau))*f_non_eq;
+                    U = [u_b, v_b];
+                    dot_U_Ksi = dot(U, Ksi(:,4));
+                    f_eq_alpha = w(4) * Rho(j,i) * (1 + dot_U_Ksi/c_s_2 + (dot_U_Ksi*dot_U_Ksi)/c_s_4 + dot(U,U) / (2*c_s_2));
+                    f_new(j,i,4)=f_eq_alpha + (1 - (1/Tau))*f_non_eq;
                 else
                     f_new(j,i,4)=f(j,i+1,4);
                 end
@@ -200,14 +204,17 @@ for t=1:T
                     % Calculate the boundary node velocity using GZS scheme.
                     f_non_eq = f_new(j,i,3) - f_eq(j,i,3);
                     if delta>=0.75
-                        u_ff=u_b1;
-                        v_ff=v_b1;
+                        u_b=u_b1;
+                        v_b=v_b1;
                     else
-                        u_ff=delta*u_b1+(1-delta)*u_b2;
-                        v_ff=delta*v_b1+(1-delta)*v_b2;
+                        u_b=delta*u_b1+(1-delta)*u_b2;
+                        v_b=delta*v_b1+(1-delta)*v_b2;
                         f_non_eq = delta*f_non_eq+(1-delta)*f_non_eq;
                     end
-                    f_new(j,i,5)=f_eq(j,i,3) + (1 - (1/Tau))*f_non_eq;
+                    U = [u_b, v_b];
+                    dot_U_Ksi = dot(U, Ksi(:,5));
+                    f_eq_alpha = w(5) * Rho(j,i) * (1 + dot_U_Ksi/c_s_2 + (dot_U_Ksi*dot_U_Ksi)/c_s_4 + dot(U,U) / (2*c_s_2));
+                    f_new(j,i,5)=f_eq_alpha + (1 - (1/Tau))*f_non_eq;
                 else
                     f_new(j,i,5)=f(j-1,i,5);
                 end
@@ -243,14 +250,17 @@ for t=1:T
                     % Calculate the boundary node velocity using GZS scheme.
                     f_non_eq = f_new(j,i,4) - f_eq(j,i,4);
                     if delta>=0.75
-                        u_ff=u_b1;
-                        v_ff=v_b1;
+                        u_b=u_b1;
+                        v_b=v_b1;
                     else
-                        u_ff=delta*u_b1+(1-delta)*u_b2;
-                        v_ff=delta*v_b1+(1-delta)*v_b2;
+                        u_b=delta*u_b1+(1-delta)*u_b2;
+                        v_b=delta*v_b1+(1-delta)*v_b2;
                         f_non_eq = delta*f_non_eq+(1-delta)*f_non_eq;
                     end
-                    f_new(j,i,2)=f_eq(j,i,4) + (1 - (1/Tau))*f_non_eq;
+                    U = [u_b, v_b];
+                    dot_U_Ksi = dot(U, Ksi(:,2));
+                    f_eq_alpha = w(2) * Rho(j,i) * (1 + dot_U_Ksi/c_s_2 + (dot_U_Ksi*dot_U_Ksi)/c_s_4 + dot(U,U) / (2*c_s_2));
+                    f_new(j,i,2)=f_eq_alpha + (1 - (1/Tau))*f_non_eq;
                 else
                     f_new(j,i,2)=f(j,i-1,2);
                 end
@@ -286,14 +296,17 @@ for t=1:T
                     % Calculate the boundary node velocity using GZS scheme.
                     f_non_eq = f_new(j,i,5) - f_eq(j,i,5);
                     if delta>=0.75
-                        u_ff=u_b1;
-                        v_ff=v_b1;
+                        u_b=u_b1;
+                        v_b=v_b1;
                     else
-                        u_ff=delta*u_b1+(1-delta)*u_b2;
-                        v_ff=delta*v_b1+(1-delta)*v_b2;
+                        u_b=delta*u_b1+(1-delta)*u_b2;
+                        v_b=delta*v_b1+(1-delta)*v_b2;
                         f_non_eq = delta*f_non_eq+(1-delta)*f_non_eq;
                     end
-                    f_new(j,i,3)=f_eq(j,i,5) + (1 - (1/Tau))*f_non_eq;
+                    U = [u_b, v_b];
+                    dot_U_Ksi = dot(U, Ksi(:,3));
+                    f_eq_alpha = w(3) * Rho(j,i) * (1 + dot_U_Ksi/c_s_2 + (dot_U_Ksi*dot_U_Ksi)/c_s_4 + dot(U,U) / (2*c_s_2));
+                    f_new(j,i,3)=f_eq_alpha + (1 - (1/Tau))*f_non_eq;
                 else
                     f_new(j,i,3)=f(j+1,i,3);
                 end
@@ -329,14 +342,17 @@ for t=1:T
                     % Calculate the boundary node velocity using GZS scheme.
                     f_non_eq = f_new(j,i,6) - f_eq(j,i,6);
                     if delta>=0.75
-                        u_ff=u_b1;
-                        v_ff=v_b1;
+                        u_b=u_b1;
+                        v_b=v_b1;
                     else
-                        u_ff=delta*u_b1+(1-delta)*u_b2;
-                        v_ff=delta*v_b1+(1-delta)*v_b2;
+                        u_b=delta*u_b1+(1-delta)*u_b2;
+                        v_b=delta*v_b1+(1-delta)*v_b2;
                         f_non_eq = delta*f_non_eq+(1-delta)*f_non_eq;
                     end
-                    f_new(j,i,8)=f_eq(j,i,6) + (1 - (1/Tau))*f_non_eq;
+                    U = [u_b, v_b];
+                    dot_U_Ksi = dot(U, Ksi(:,8));
+                    f_eq_alpha = w(8) * Rho(j,i) * (1 + dot_U_Ksi/c_s_2 + (dot_U_Ksi*dot_U_Ksi)/c_s_4 + dot(U,U) / (2*c_s_2));
+                    f_new(j,i,8)=f_eq_alpha + (1 - (1/Tau))*f_non_eq;
                 else
                     f_new(j,i,8)=f(j-1,i+1,8);
                 end
@@ -371,14 +387,17 @@ for t=1:T
                     % Calculate the boundary node velocity using GZS scheme.
                     f_non_eq = f_new(j,i,7) - f_eq(j,i,7);
                     if delta>=0.75
-                        u_ff=u_b1;
-                        v_ff=v_b1;
+                        u_b=u_b1;
+                        v_b=v_b1;
                     else
-                        u_ff=delta*u_b1+(1-delta)*u_b2;
-                        v_ff=delta*v_b1+(1-delta)*v_b2;
+                        u_b=delta*u_b1+(1-delta)*u_b2;
+                        v_b=delta*v_b1+(1-delta)*v_b2;
                         f_non_eq = delta*f_non_eq+(1-delta)*f_non_eq;
                     end
-                    f_new(j,i,9)=f_eq(j,i,7) + (1 - (1/Tau))*f_non_eq;
+                    U = [u_b, v_b];
+                    dot_U_Ksi = dot(U, Ksi(:,9));
+                    f_eq_alpha = w(9) * Rho(j,i) * (1 + dot_U_Ksi/c_s_2 + (dot_U_Ksi*dot_U_Ksi)/c_s_4 + dot(U,U) / (2*c_s_2));
+                    f_new(j,i,9)=f_eq_alpha + (1 - (1/Tau))*f_non_eq;
                 else
                     f_new(j,i,9)=f(j-1,i-1,9);
                 end
@@ -414,14 +433,17 @@ for t=1:T
                     % Calculate the boundary node velocity using GZS scheme.
                     f_non_eq = f_new(j,i,8) - f_eq(j,i,8);
                     if delta>=0.75
-                        u_ff=u_b1;
-                        v_ff=v_b1;
+                        u_b=u_b1;
+                        v_b=v_b1;
                     else
-                        u_ff=delta*u_b1+(1-delta)*u_b2;
-                        v_ff=delta*v_b1+(1-delta)*v_b2;
+                        u_b=delta*u_b1+(1-delta)*u_b2;
+                        v_b=delta*v_b1+(1-delta)*v_b2;
                         f_non_eq = delta*f_non_eq+(1-delta)*f_non_eq;
                     end
-                    f_new(j,i,6)=f_eq(j,i,8) + (1 - (1/Tau))*f_non_eq;
+                    U = [u_b, v_b];
+                    dot_U_Ksi = dot(U, Ksi(:,6));
+                    f_eq_alpha = w(6) * Rho(j,i) * (1 + dot_U_Ksi/c_s_2 + (dot_U_Ksi*dot_U_Ksi)/c_s_4 + dot(U,U) / (2*c_s_2));
+                    f_new(j,i,6)=f_eq_alpha + (1 - (1/Tau))*f_non_eq;
                 else
                     f_new(j,i,6)=f(j+1,i-1,6);
                 end
@@ -457,14 +479,17 @@ for t=1:T
                     % Calculate the boundary node velocity using GZS scheme.
                     f_non_eq = f_new(j,i,9) - f_eq(j,i,9);
                     if delta>=0.75
-                        u_ff=u_b1;
-                        v_ff=v_b1;
+                        u_b=u_b1;
+                        v_b=v_b1;
                     else
-                        u_ff=delta*u_b1+(1-delta)*u_b2;
-                        v_ff=delta*v_b1+(1-delta)*v_b2;
+                        u_b=delta*u_b1+(1-delta)*u_b2;
+                        v_b=delta*v_b1+(1-delta)*v_b2;
                         f_non_eq = delta*f_non_eq+(1-delta)*f_non_eq;
                     end
-                    f_new(j,i,7)=f_eq(j,i,9) + (1 - (1/Tau))*f_non_eq;
+                    U = [u_b, v_b];
+                    dot_U_Ksi = dot(U, Ksi(:,7));
+                    f_eq_alpha = w(7) * Rho(j,i) * (1 + dot_U_Ksi/c_s_2 + (dot_U_Ksi*dot_U_Ksi)/c_s_4 + dot(U,U) / (2*c_s_2));
+                    f_new(j,i,7)=f_eq_alpha + (1 - (1/Tau))*f_non_eq;
                 else
                     f_new(j,i,7)=f(j+1,i+1,7);
                 end
@@ -620,24 +645,24 @@ for t=1:T
 end
 
 %% Visualization
-figure;
-contourf(flipud(Zone_ID==2),30)
-title("Zone_ID==2")
-axis equal tight
-
-figure;
-contourf(flipud(Zone_ID==1),30)
-title("Zone_ID==1")
-axis equal tight
+% figure;
+% contourf(flipud(Zone_ID==2),30)
+% title("Zone_ID==2")
+% axis equal tight
+% 
+% figure;
+% contourf(flipud(Zone_ID==1),30)
+% title("Zone_ID==1")
+% axis equal tight
 
 figure;
 quiver(flipud(u),flipud(v),10)
-title("Velocity Plot")
+title("Velocity Plot (GZS)")
 axis equal tight
 
 figure;
 contourf(Rho,30)
-title("Density Plot")
+title("Density Plot (GZS)")
 axis equal tight
 
 dt = datetime('now', 'TimeZone', 'UTC');
