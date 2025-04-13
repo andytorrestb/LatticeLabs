@@ -1,6 +1,8 @@
+clear all;
+
 %% Define parameters
 % Domain
-N_x=100;
+N_x=51;
 N_y=51;
 dx=1;
 dy=1;
@@ -15,6 +17,9 @@ Rho_in=1;
 Rho=ones(N_y,N_x)*Rho_in;
 T=ones(N_y,N_x);
 R=8.314; % Gas constant
+k_t = 1;
+h = 1;
+T_inf = 0.8;
 T_H=1;
 T_L=0.1;
 g_eq=zeros(N_y,N_x,9);
@@ -31,6 +36,7 @@ g_new=g;
 Timer=10000;
 %% Solving
 for t=1:Timer
+    disp(t)
     % Streaming
     for j=1:N_y
         for i=1:N_x
@@ -70,7 +76,7 @@ for t=1:Timer
                     g_new(j,i,7)=g(j+1,i+1,7);
 
                     g_new(j,i,5)=g_new(j,i,3);
-                    T_w=T(j+1,i);
+                    T_w=T_L;
                     g_new(j,i,8)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,6)-g_new(j,i,7))/2;
                     g_new(j,i,9)=g_new(j,i,8);
                 end
@@ -110,7 +116,7 @@ for t=1:Timer
                     g_new(j,i,9)=g(j-1,i-1,9);
 
                     g_new(j,i,3)=g_new(j,i,5);
-                    T_w=T(j-1,i);
+                    T_w = (k_t/dy * T(j-1,i) + h * T_inf) / (k_t/dy + h);
                     g_new(j,i,6)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,8)-g_new(j,i,9))/2;
                     g_new(j,i,7)=g_new(j,i,6);
                 end
@@ -135,7 +141,7 @@ for t=1:Timer
                 g_new(j,i,9)=g(j-1,i-1,9);
 
                 g_new(j,i,4)=g_new(j,i,2);
-                T_w=T_L;
+                T_w=T(j, i-1);
                 g_new(j,i,7)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,6)-g_new(j,i,9))/2;
                 g_new(j,i,8)=g_new(j,i,7);
             else % All interior nodes
