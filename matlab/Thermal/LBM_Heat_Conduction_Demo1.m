@@ -35,10 +35,6 @@ w=[0 1/6 1/6 1/6 1/6 1/12 1/12 1/12 1/12];
 c_s=1;
 Tau=1;
 %% Initialization
-% Energy fields
-Rho_in=1;
-Rho=ones(N_y,N_x)*Rho_in;
-T=ones(N_y,N_x);
 
 % Heat conduction parameters
 R=8.314; % Gas constant
@@ -95,12 +91,19 @@ contourf(flipud(Zone_ID),30)
 title("Zone_ID")
 axis equal tight
 
+% Energy fields
+Rho_in=1;
+Rho=ones(N_y,N_x)*Rho_in;
+T=ones(N_y,N_x);
+
 % Initialization of equalibrium PDF.
 g_eq=zeros(N_y,N_x,9);
 for j=1:N_y
     for i=1:N_x
-        for k=1:9
-            g_eq(j,i,k)=w(k)*Rho(j,i)*R*T(j,i);
+        if Domain_ID(j,i) == 1
+            for k=1:9
+                g_eq(j,i,k)=w(k)*Rho(j,i)*R*T(j,i);
+            end
         end
     end
 end
@@ -114,120 +117,127 @@ for t=1:Timer
     % Streaming
     for j=1:N_y
         for i=1:N_x
-            if j==1 % Top surface
-                if i==1 % Top-Left corner
+            if Zone_ID(j,i) == 0 % Dead Zone
+                % Do Nothing
+            elseif Zone_ID(j,i) == 1 % Boundary Nodes
+                % Do Nothing
+            elseif Zone_ID(j,i) == 2 % Fluid Nodes
+            else 
+                if j==1 % Top surface
+                    if i==1 % Top-Left corner
+                        g_new(j,i,1)=g(j,i,1);
+                        g_new(j,i,3)=g(j+1,i,3);
+                        g_new(j,i,4)=g(j,i+1,4);
+                        g_new(j,i,7)=g(j+1,i+1,7);
+
+                        g_new(j,i,2)=g_new(j,i,4);
+                        g_new(j,i,5)=g_new(j,i,3);
+                        T_w=T(j+1,i);
+                        % T_w=T_H; % second option
+                        g_new(j,i,9)=g_new(j,i,7);
+                        g_new(j,i,6)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,7)-g_new(j,i,9))/2;
+                        g_new(j,i,8)=g_new(j,i,6);
+                    elseif i==N_x % Top-Right corner
+                        g_new(j,i,1)=g(j,i,1);
+                        g_new(j,i,2)=g(j,i-1,2);
+                        g_new(j,i,3)=g(j+1,i,3);
+                        g_new(j,i,6)=g(j+1,i-1,6);
+
+                        g_new(j,i,4)=g_new(j,i,2);
+                        g_new(j,i,5)=g_new(j,i,3);
+                        g_new(j,i,8)=g_new(j,i,6);
+                        T_w=T(j+1,i);
+                        % T_w=T_L % Second option
+                        g_new(j,i,7)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,6)-g_new(j,i,8))/2;
+                        g_new(j,i,9)=g_new(j,i,7);
+                    else % All other nodes on the top surface
+                        g_new(j,i,1)=g(j,i,1);
+                        g_new(j,i,2)=g(j,i-1,2);
+                        g_new(j,i,3)=g(j+1,i,3);
+                        g_new(j,i,4)=g(j,i+1,4);
+                        g_new(j,i,6)=g(j+1,i-1,6);
+                        g_new(j,i,7)=g(j+1,i+1,7);
+
+                        g_new(j,i,5)=g_new(j,i,3);
+                        T_w=T_L;
+                        g_new(j,i,8)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,6)-g_new(j,i,7))/2;
+                        g_new(j,i,9)=g_new(j,i,8);
+                    end
+                elseif j==N_y % Bottom surface
+                    if i==1 % Bottom-Left corner
+                        g_new(j,i,1)=g(j,i,1);
+                        g_new(j,i,4)=g(j,i+1,4);
+                        g_new(j,i,5)=g(j-1,i,5);
+                        g_new(j,i,8)=g(j-1,i+1,8);
+
+                        g_new(j,i,2)=g_new(j,i,4);
+                        g_new(j,i,3)=g_new(j,i,5);
+                        g_new(j,i,6)=g_new(j,i,8);
+                        T_w=T(j-1,1);
+                        % T_w=T_H; % Second option
+                        g_new(j,i,7)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,6)-g_new(j,i,8))/2;
+                        g_new(j,i,9)=g_new(j,i,7);
+                    elseif i==N_x % Bottom-Right corner
+                        g_new(j,i,1)=g(j,i,1);
+                        g_new(j,i,2)=g(j,i-1,2);
+                        g_new(j,i,5)=g(j-1,i,5);
+                        g_new(j,i,9)=g(j-1,i-1,9);
+
+                        g_new(j,i,3)=g_new(j,i,5);
+                        g_new(j,i,4)=g_new(j,i,2); 
+                        g_new(j,i,7)=g_new(j,i,9);
+                        T_w=T(j-1,i);
+                        % T_w=T_L; % Second option
+                        g_new(j,i,6)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,7)-g_new(j,i,9))/2;
+                        g_new(j,i,8)=g_new(j,i,6);
+                    else % All other nodes on the bottom surface
+                        g_new(j,i,1)=g(j,i,1);
+                        g_new(j,i,2)=g(j,i-1,2);
+                        g_new(j,i,4)=g(j,i+1,4);
+                        g_new(j,i,5)=g(j-1,i,5);
+                        g_new(j,i,8)=g(j-1,i+1,8);
+                        g_new(j,i,9)=g(j-1,i-1,9);
+
+                        g_new(j,i,3)=g_new(j,i,5);
+                        T_w = (k_t/dy * T(j-1,i) + h * T_inf) / (k_t/dy + h);
+                        g_new(j,i,6)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,8)-g_new(j,i,9))/2;
+                        g_new(j,i,7)=g_new(j,i,6);
+                    end
+                elseif i==1 % Left surface
                     g_new(j,i,1)=g(j,i,1);
                     g_new(j,i,3)=g(j+1,i,3);
                     g_new(j,i,4)=g(j,i+1,4);
+                    g_new(j,i,5)=g(j-1,i,5);
                     g_new(j,i,7)=g(j+1,i+1,7);
+                    g_new(j,i,8)=g(j-1,i+1,8);
 
                     g_new(j,i,2)=g_new(j,i,4);
-                    g_new(j,i,5)=g_new(j,i,3);
-                    T_w=T(j+1,i);
-                    % T_w=T_H; % second option
-                    g_new(j,i,9)=g_new(j,i,7);
-                    g_new(j,i,6)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,7)-g_new(j,i,9))/2;
-                    g_new(j,i,8)=g_new(j,i,6);
-                elseif i==N_x % Top-Right corner
+                    T_w=T_H;
+                    g_new(j,i,6)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,7)-g_new(j,i,8))/2;
+                    g_new(j,i,9)=g_new(j,i,6);
+                elseif i==N_x % Right surface
                     g_new(j,i,1)=g(j,i,1);
                     g_new(j,i,2)=g(j,i-1,2);
                     g_new(j,i,3)=g(j+1,i,3);
+                    g_new(j,i,5)=g(j-1,i,5);
                     g_new(j,i,6)=g(j+1,i-1,6);
+                    g_new(j,i,9)=g(j-1,i-1,9);
 
                     g_new(j,i,4)=g_new(j,i,2);
-                    g_new(j,i,5)=g_new(j,i,3);
-                    g_new(j,i,8)=g_new(j,i,6);
-                    T_w=T(j+1,i);
-                    % T_w=T_L % Second option
-                    g_new(j,i,7)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,6)-g_new(j,i,8))/2;
-                    g_new(j,i,9)=g_new(j,i,7);
-                else % All other nodes on the top surface
+                    T_w=T(j, i-1);
+                    g_new(j,i,7)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,6)-g_new(j,i,9))/2;
+                    g_new(j,i,8)=g_new(j,i,7);
+                else % All interior nodes
                     g_new(j,i,1)=g(j,i,1);
                     g_new(j,i,2)=g(j,i-1,2);
                     g_new(j,i,3)=g(j+1,i,3);
                     g_new(j,i,4)=g(j,i+1,4);
+                    g_new(j,i,5)=g(j-1,i,5);
                     g_new(j,i,6)=g(j+1,i-1,6);
                     g_new(j,i,7)=g(j+1,i+1,7);
-
-                    g_new(j,i,5)=g_new(j,i,3);
-                    T_w=T_L;
-                    g_new(j,i,8)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,6)-g_new(j,i,7))/2;
-                    g_new(j,i,9)=g_new(j,i,8);
-                end
-            elseif j==N_y % Bottom surface
-                if i==1 % Bottom-Left corner
-                    g_new(j,i,1)=g(j,i,1);
-                    g_new(j,i,4)=g(j,i+1,4);
-                    g_new(j,i,5)=g(j-1,i,5);
-                    g_new(j,i,8)=g(j-1,i+1,8);
-
-                    g_new(j,i,2)=g_new(j,i,4);
-                    g_new(j,i,3)=g_new(j,i,5);
-                    g_new(j,i,6)=g_new(j,i,8);
-                    T_w=T(j-1,1);
-                    % T_w=T_H; % Second option
-                    g_new(j,i,7)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,6)-g_new(j,i,8))/2;
-                    g_new(j,i,9)=g_new(j,i,7);
-                elseif i==N_x % Bottom-Right corner
-                    g_new(j,i,1)=g(j,i,1);
-                    g_new(j,i,2)=g(j,i-1,2);
-                    g_new(j,i,5)=g(j-1,i,5);
-                    g_new(j,i,9)=g(j-1,i-1,9);
-
-                    g_new(j,i,3)=g_new(j,i,5);
-                    g_new(j,i,4)=g_new(j,i,2); 
-                    g_new(j,i,7)=g_new(j,i,9);
-                    T_w=T(j-1,i);
-                    % T_w=T_L; % Second option
-                    g_new(j,i,6)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,7)-g_new(j,i,9))/2;
-                    g_new(j,i,8)=g_new(j,i,6);
-                else % All other nodes on the bottom surface
-                    g_new(j,i,1)=g(j,i,1);
-                    g_new(j,i,2)=g(j,i-1,2);
-                    g_new(j,i,4)=g(j,i+1,4);
-                    g_new(j,i,5)=g(j-1,i,5);
                     g_new(j,i,8)=g(j-1,i+1,8);
                     g_new(j,i,9)=g(j-1,i-1,9);
-
-                    g_new(j,i,3)=g_new(j,i,5);
-                    T_w = (k_t/dy * T(j-1,i) + h * T_inf) / (k_t/dy + h);
-                    g_new(j,i,6)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,8)-g_new(j,i,9))/2;
-                    g_new(j,i,7)=g_new(j,i,6);
                 end
-            elseif i==1 % Left surface
-                g_new(j,i,1)=g(j,i,1);
-                g_new(j,i,3)=g(j+1,i,3);
-                g_new(j,i,4)=g(j,i+1,4);
-                g_new(j,i,5)=g(j-1,i,5);
-                g_new(j,i,7)=g(j+1,i+1,7);
-                g_new(j,i,8)=g(j-1,i+1,8);
-
-                g_new(j,i,2)=g_new(j,i,4);
-                T_w=T_H;
-                g_new(j,i,6)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,7)-g_new(j,i,8))/2;
-                g_new(j,i,9)=g_new(j,i,6);
-            elseif i==N_x % Right surface
-                g_new(j,i,1)=g(j,i,1);
-                g_new(j,i,2)=g(j,i-1,2);
-                g_new(j,i,3)=g(j+1,i,3);
-                g_new(j,i,5)=g(j-1,i,5);
-                g_new(j,i,6)=g(j+1,i-1,6);
-                g_new(j,i,9)=g(j-1,i-1,9);
-
-                g_new(j,i,4)=g_new(j,i,2);
-                T_w=T(j, i-1);
-                g_new(j,i,7)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,6)-g_new(j,i,9))/2;
-                g_new(j,i,8)=g_new(j,i,7);
-            else % All interior nodes
-                g_new(j,i,1)=g(j,i,1);
-                g_new(j,i,2)=g(j,i-1,2);
-                g_new(j,i,3)=g(j+1,i,3);
-                g_new(j,i,4)=g(j,i+1,4);
-                g_new(j,i,5)=g(j-1,i,5);
-                g_new(j,i,6)=g(j+1,i-1,6);
-                g_new(j,i,7)=g(j+1,i+1,7);
-                g_new(j,i,8)=g(j-1,i+1,8);
-                g_new(j,i,9)=g(j-1,i-1,9);
             end
         end
     end
