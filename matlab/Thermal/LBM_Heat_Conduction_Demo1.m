@@ -275,5 +275,6 @@ plot((0:1:N_x-1)/(N_x-1),(T_sim-T_L)/(T_H-T_L),'blue');
 
 figure
 contourf(flipud(T),30)
+colormap(hot)
 axis equal tight
 
