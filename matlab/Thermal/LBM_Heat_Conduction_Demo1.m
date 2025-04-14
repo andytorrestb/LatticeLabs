@@ -20,6 +20,15 @@ dy=1;
 x_circ=(N_x-1)/2;
 y_circ=(N_y-1)/2;
 
+% Establish arrays to store coordinate data for graphing and curve boundaryb checks.
+for i=1:N_x
+    x(i)=dx*(i-1);
+end
+
+for j=1:N_y
+    y(j)=dy*(j-1);
+end
+
 % LBM related
 Ksi=[0 1 0 -1  0 1 -1  -1  1;...
      0 0 1  0 -1 1  1  -1 -1];
@@ -115,6 +124,243 @@ for t=1:Timer
             elseif Zone_ID(j,i) == 1 % Boundary Nodes
                 % Do Nothing
             elseif Zone_ID(j,i) == 2 % Fluid Nodes
+              % Implemet the curved boundary condition
+                %% Direction 1
+                g_new(j,i,1)=g(j,i,1);
+
+                %% Direction 2
+                if Zone_ID(j,i+1)==1
+                    x1=x(i+1);
+                    y1=y(j);
+                    x2=x(i);
+                    y2=y(j);
+                    C_w=find_the_wall_point(x1,y1,x2,y2,radius,x_circ,y_circ);
+                    delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+                    
+                    T_f = T(j,i);
+                    T_w = T_3;
+                    T_ff = T(j, i-1);
+                    Tb1 = ((delta - 1)*T_f + T_w)/delta;
+                    Tb2 = ((delta-1)*T_ff +2*T_w)/delta;
+
+                    g_non_eq = g_new(j,i,2) - g_eq(j,i,2);
+                    if delta>=0.75 
+                        Tb = Tb1;
+                        g_eq_alpha = w(2)*Rho(j,i)*R*Tb;
+                    else
+                        Tb = delta*Tb1+(1-delta)*Tb2;
+                        g_eq_alpha = delta*g_non_eq + (1-delta)*g_non_eq;
+                    end
+
+                    g_new(j,i,4)=g_eq_alpha + (1 - (1/Tau))*g_non_eq;
+                else
+                    g_new(j,i,4)=g(j,i+1,4);
+                end
+
+                %% Direction 3
+                if Zone_ID(j-1,i)==1
+                    x1=x(i);
+                    y1=y(j-1);
+                    x2=x(i);
+                    y2=y(j);
+                    C_w=find_the_wall_point(x1,y1,x2,y2,radius,x_circ,y_circ);
+                    delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+
+                    T_f = T(j,i);
+                    T_w = T_3;
+                    T_ff = T(j+1, i);
+                    Tb1 = ((delta - 1)*T_f + T_w)/delta;
+                    Tb2 = ((delta-1)*T_ff +2*T_w)/delta;
+
+                    g_non_eq = g_new(j,i,3) - g_eq(j,i,3);
+                    if delta>=0.75 
+                        Tb = Tb1;
+                        g_eq_alpha = w(3)*Rho(j,i)*R*Tb;
+                    else
+                        Tb = delta*Tb1+(1-delta)*Tb2;
+                        g_eq_alpha = delta*g_non_eq + (1-delta)*g_non_eq;
+                    end
+
+                    g_new(j,i,5)=g_eq_alpha + (1 - (1/Tau))*g_non_eq;
+                else
+                    g_new(j,i,5)=g(j-1,i,5);
+                end
+
+                %% Direction 4
+                if Zone_ID(j,i-1)==1
+                    x1=x(i-1);
+                    y1=y(j);
+                    x2=x(i);
+                    y2=y(j);
+                    C_w=find_the_wall_point(x1,y1,x2,y2,radius,x_circ,y_circ);
+                    delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+
+                    T_f = T(j,i);
+                    T_w = T_3;
+                    T_ff = T(j, i+1);
+                    Tb1 = ((delta - 1)*T_f + T_w)/delta;
+                    Tb2 = ((delta-1)*T_ff +2*T_w)/delta;
+
+                    g_non_eq = g_new(j,i,4) - g_eq(j,i,4);
+                    if delta>=0.75 
+                        Tb = Tb1;
+                        g_eq_alpha = w(4)*Rho(j,i)*R*Tb;
+                    else
+                        Tb = delta*Tb1+(1-delta)*Tb2;
+                        g_eq_alpha = delta*g_non_eq + (1-delta)*g_non_eq;
+                    end
+
+                    g_new(j,i,2)=g_eq_alpha + (1 - (1/Tau))*g_non_eq;
+                else
+                    g_new(j,i,2)=g(j,i-1,2);
+                end
+
+                %% Direction 5
+                if Zone_ID(j+1,i)==1
+                    x1=x(i);
+                    y1=y(j+1);
+                    x2=x(i);
+                    y2=y(j);
+                    C_w=find_the_wall_point(x1,y1,x2,y2,radius,x_circ,y_circ);
+                    delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+
+                    % Calculate the boundary node velocity using GZS scheme.
+                    T_f = T(j,i);
+                    T_w = T_3;
+                    T_ff = T(j-1, i);
+                    Tb1 = ((delta - 1)*T_f + T_w)/delta;
+                    Tb2 = ((delta-1)*T_ff +2*T_w)/delta;
+
+                    g_non_eq = g_new(j,i,5) - g_eq(j,i,5);
+                    if delta>=0.75 
+                        Tb = Tb1;
+                        g_eq_alpha = w(5)*Rho(j,i)*R*Tb;
+                    else
+                        Tb = delta*Tb1+(1-delta)*Tb2;
+                        g_eq_alpha = delta*g_non_eq + (1-delta)*g_non_eq;
+                    end
+
+                    g_new(j,i,3)=g_eq_alpha + (1 - (1/Tau))*g_non_eq;
+                else
+                    g_new(j,i,3)=g(j+1,i,3);
+                end
+
+                %% Direction 6
+                if Zone_ID(j-1,i+1)==1
+                    x1=x(i+1);
+                    y1=y(j-1);
+                    x2=x(i);
+                    y2=y(j);
+                    C_w=find_the_wall_point(x1,y1,x2,y2,radius,x_circ,y_circ);
+                    delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+
+                    T_f = T(j,i);
+                    T_w = T_3;
+                    T_ff = T(j+1, i);
+                    Tb1 = ((delta - 1)*T_f + T_w)/delta;
+                    Tb2 = ((delta-1)*T_ff +2*T_w)/delta;
+
+                    g_non_eq = g_new(j,i,6) - g_eq(j,i,6);
+                    if delta>=0.75 
+                        Tb = Tb1;
+                        g_eq_alpha = w(6)*Rho(j,i)*R*Tb;
+                    else
+                        Tb = delta*Tb1+(1-delta)*Tb2;
+                        g_eq_alpha = delta*g_non_eq + (1-delta)*g_non_eq;
+                    end
+
+                    g_new(j,i,8)=g_eq_alpha + (1 - (1/Tau))*g_non_eq;
+                else
+                    g_new(j,i,8)=g(j-1,i+1,8);
+                end
+
+                %% Direction 7
+                if Zone_ID(j-1,i-1)==1
+                    x1=x(i-1);
+                    y1=y(j-1);
+                    x2=x(i);
+                    y2=y(j);
+                    C_w=find_the_wall_point(x1,y1,x2,y2,radius,x_circ,y_circ);
+                    delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+
+                    T_f = T(j,i);
+                    T_w = T_3;
+                    T_ff = T(j+1, i+1);
+                    Tb1 = ((delta - 1)*T_f + T_w)/delta;
+                    Tb2 = ((delta-1)*T_ff +2*T_w)/delta;
+
+                    g_non_eq = g_new(j,i,7) - g_eq(j,i,7);
+                    if delta>=0.75 
+                        Tb = Tb1;
+                        g_eq_alpha = w(7)*Rho(j,i)*R*Tb;
+                    else
+                        Tb = delta*Tb1+(1-delta)*Tb2;
+                        g_eq_alpha = delta*g_non_eq + (1-delta)*g_non_eq;
+                    end
+
+                    g_new(j,i,9)=g_eq_alpha + (1 - (1/Tau))*g_non_eq;
+                else
+                    g_new(j,i,9)=g(j-1,i-1,9);
+                end
+
+                %% Direction 8
+                if Zone_ID(j+1,i-1)==1
+                    x1=x(i-1);
+                    y1=y(j+1);
+                    x2=x(i);
+                    y2=y(j);
+                    C_w=find_the_wall_point(x1,y1,x2,y2,radius,x_circ,y_circ);
+                    delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+
+                    % Calculate the boundary node velocity using GZS scheme.
+                    T_f = T(j,i);
+                    T_w = T_3;
+                    T_ff = T(j-1, i+1);
+                    Tb1 = ((delta - 1)*T_f + T_w)/delta;
+                    Tb2 = ((delta-1)*T_ff +2*T_w)/delta;
+
+                    g_non_eq = g_new(j,i,8) - g_eq(j,i,8);
+                    if delta>=0.75 
+                        Tb = Tb1;
+                        g_eq_alpha = w(8)*Rho(j,i)*R*Tb;
+                    else
+                        Tb = delta*Tb1+(1-delta)*Tb2;
+                        g_eq_alpha = delta*g_non_eq + (1-delta)*g_non_eq;
+                    end
+
+                    g_new(j,i,6)=g_eq_alpha + (1 - (1/Tau))*g_non_eq;
+                else
+                    g_new(j,i,6)=g(j+1,i-1,6);
+                end
+
+                %% Direction 9
+                if Zone_ID(j+1,i+1)==1
+                    x1=x(i+1);
+                    y1=y(j+1);
+                    x2=x(i);
+                    y2=y(j);
+                    C_w=find_the_wall_point(x1,y1,x2,y2,radius,x_circ,y_circ);
+                    delta=sqrt((C_w(1)-x2)^2+(C_w(2)-y2)^2)/sqrt((x1-x2)^2+(y1-y2)^2);
+                    
+                    T_f = T(j,i);
+                    T_w = T_3;
+                    T_ff = T(j-1, i-1);
+                    Tb1 = ((delta - 1)*T_f + T_w)/delta;
+                    Tb2 = ((delta-1)*T_ff +2*T_w)/delta;
+
+                    g_non_eq = g_new(j,i,9) - g_eq(j,i,9);
+                    if delta>=0.75 
+                        Tb = Tb1;
+                        g_eq_alpha = w(9)*Rho(j,i)*R*Tb;
+                    else
+                        Tb = delta*Tb1+(1-delta)*Tb2;
+                        g_eq_alpha = delta*g_non_eq + (1-delta)*g_non_eq;
+                    end
+
+                    g_new(j,i,7)=g_eq_alpha + (1 - (1/Tau))*g_non_eq;
+                else
+                    g_new(j,i,7)=g(j+1,i+1,7);
+                end
             else 
                 if j==1 % Top surface
                     if i==1 % Top-Left corner
@@ -126,7 +372,7 @@ for t=1:Timer
                         g_new(j,i,2)=g_new(j,i,4);
                         g_new(j,i,5)=g_new(j,i,3);
                         T_w=T(j+1,i);
-                        % T_w=T_H; % second option
+                        % T_w=T_3; % second option
                         g_new(j,i,9)=g_new(j,i,7);
                         g_new(j,i,6)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,7)-g_new(j,i,9))/2;
                         g_new(j,i,8)=g_new(j,i,6);
@@ -167,7 +413,7 @@ for t=1:Timer
                         g_new(j,i,3)=g_new(j,i,5);
                         g_new(j,i,6)=g_new(j,i,8);
                         T_w=T(j-1,1);
-                        % T_w=T_H; % Second option
+                        % T_w=T_3; % Second option
                         g_new(j,i,7)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,6)-g_new(j,i,8))/2;
                         g_new(j,i,9)=g_new(j,i,7);
                     elseif i==N_x % Bottom-Right corner
@@ -241,7 +487,7 @@ for t=1:Timer
             T(j,i)=sum(g_new(j,i,:))/R/Rho(j,i);
         end
     end
-    % Computing f_eq
+    % Computing g_eq
     for j=1:N_y
         for i=1:N_x
             g_eq(j,i,:)=w'*Rho(j,i)*R*T(j,i);
@@ -265,15 +511,6 @@ contourf(flipud(T),30)
 colormap(hot)
 axis equal tight
 
-
-% Establish arrays to store coordinate data for graphing.
-for i=1:N_x
-    x(i)=dx*(i-1);
-end
-
-for j=1:N_y
-    y(j)=dy*(j-1);
-end
 
 % Normalize array data
 x_norm = x / L;
