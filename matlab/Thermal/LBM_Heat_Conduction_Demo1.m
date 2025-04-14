@@ -13,15 +13,20 @@ w=[0 1/6 1/6 1/6 1/6 1/12 1/12 1/12 1/12];
 c_s=1;
 Tau=1;
 %% Initialization
+% Energy fields
 Rho_in=1;
 Rho=ones(N_y,N_x)*Rho_in;
 T=ones(N_y,N_x);
+
+% Heat conduction parameters
 R=8.314; % Gas constant
-k_t = 1;
+k_t = 0.125;
 h = 1;
 T_inf = 0.8;
-T_H=1;
-T_L=0.1;
+T_H=0.33;
+T_L=0.5;
+
+% Initialization of equalibrium PDF.
 g_eq=zeros(N_y,N_x,9);
 for j=1:N_y
     for i=1:N_x
@@ -33,8 +38,8 @@ end
 g=g_eq;
 g_new=g;
 
+%% Main simulation loop.
 Timer=10000;
-%% Solving
 for t=1:Timer
     disp(t)
     % Streaming
