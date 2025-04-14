@@ -4,11 +4,13 @@ clear all;
 %% Define parameters
 
 % Cylinder Geometry
-R=11; % Cylinder radius will be used to determine the domain size
-D=2*R;
+% Cylinder radius will be used to determine the domain size (this must be
+% an odd number to ensure easy sampling at the middle plane). 
+radius=11;
+D=2*radius;
 
 % Domain Size and Resolution
-L=5*R;
+L=5*radius;
 N_x=L;
 N_y=L;
 dx=1;
@@ -17,16 +19,6 @@ dy=1;
 % Cylinder center coordinates
 x_circ=(N_x-1)/2;
 y_circ=(N_y-1)/2;
-
-% Establish arrays to store coordinate data for graphing.
-for i=1:N_x
-    x(i)=dx*(i-1);
-end
-
-for j=1:N_y
-    y(j)=dy*(j-1);
-end
-
 
 % LBM related
 Ksi=[0 1 0 -1  0 1 -1  -1  1;...
@@ -41,8 +33,9 @@ R=8.314; % Gas constant
 k_t = 0.125;
 h = 1;
 T_inf = 0.8;
-T_H=0.33;
-T_L=0.5;
+T_1=0.5;
+T_2=0.33;
+T_3 = 1;
 
 %% Zoning
 %% Domain_ID=0 --- Solid Domain
@@ -50,16 +43,16 @@ T_L=0.5;
 Domain_ID=zeros(N_y,N_x);
 for j=1:N_y
     for i=1:N_x
-        if test_circle(i-1,j-1,R,x_circ,y_circ)
+        if test_circle(i-1,j-1,radius,x_circ,y_circ)
             Domain_ID(j,i)=0;
         else
             Domain_ID(j,i)=1;
         end
     end
 end
-contourf(flipud(Domain_ID),30)
-title("Domain_ID")
-axis equal tight
+% contourf(flipud(Domain_ID),30)
+% title("Domain_ID")
+% axis equal tight
 
 %% Zone_ID=0 --- Dead zone
 %% Zone_ID=1 --- Boundary/Solid nodes
@@ -87,9 +80,9 @@ for j=1:N_y
         end
     end
 end
-contourf(flipud(Zone_ID),30)
-title("Zone_ID")
-axis equal tight
+% contourf(flipud(Zone_ID),30)
+% title("Zone_ID")
+% axis equal tight
 
 % Energy fields
 Rho_in=1;
@@ -159,7 +152,7 @@ for t=1:Timer
                         g_new(j,i,7)=g(j+1,i+1,7);
 
                         g_new(j,i,5)=g_new(j,i,3);
-                        T_w=T_L;
+                        T_w=T_1;
                         g_new(j,i,8)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,6)-g_new(j,i,7))/2;
                         g_new(j,i,9)=g_new(j,i,8);
                     end
@@ -212,7 +205,7 @@ for t=1:Timer
                     g_new(j,i,8)=g(j-1,i+1,8);
 
                     g_new(j,i,2)=g_new(j,i,4);
-                    T_w=T_H;
+                    T_w=T_2;
                     g_new(j,i,6)=(Rho(j,i)*R*T_w-g_new(j,i,1)-g_new(j,i,2)-g_new(j,i,3)-g_new(j,i,4)-g_new(j,i,5)-g_new(j,i,7)-g_new(j,i,8))/2;
                     g_new(j,i,9)=g_new(j,i,6);
                 elseif i==N_x % Right surface
