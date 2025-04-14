@@ -1,11 +1,33 @@
+clc;
 clear all;
 
 %% Define parameters
-% Domain
-N_x=51;
-N_y=51;
+
+% Cylinder Geometry
+R=11; % Cylinder radius will be used to determine the domain size
+D=2*R;
+
+% Domain Size and Resolution
+L=5*R;
+N_x=L;
+N_y=L;
 dx=1;
 dy=1;
+
+% Cylinder center coordinates
+x_circ=(N_x-1)/2;
+y_circ=(N_y-1)/2;
+
+% Establish arrays to store coordinate data for graphing.
+for i=1:N_x
+    x(i)=dx*(i-1);
+end
+
+for j=1:N_y
+    y(j)=dy*(j-1);
+end
+
+
 % LBM related
 Ksi=[0 1 0 -1  0 1 -1  -1  1;...
      0 0 1  0 -1 1  1  -1 -1];
@@ -25,6 +47,53 @@ h = 1;
 T_inf = 0.8;
 T_H=0.33;
 T_L=0.5;
+
+%% Zoning
+%% Domain_ID=0 --- Solid Domain
+%% Domain_ID=1 --- Fluid Domain
+Domain_ID=zeros(N_y,N_x);
+for j=1:N_y
+    for i=1:N_x
+        if test_circle(i-1,j-1,R,x_circ,y_circ)
+            Domain_ID(j,i)=0;
+        else
+            Domain_ID(j,i)=1;
+        end
+    end
+end
+contourf(flipud(Domain_ID),30)
+title("Domain_ID")
+axis equal tight
+
+%% Zone_ID=0 --- Dead zone
+%% Zone_ID=1 --- Boundary/Solid nodes
+%% Zone_ID=2 --- Fluid Nodes
+%% Zone_ID=3 --- Regular nodes in the fluid domain (including the nodes on the outer boundaries)
+Zone_ID=zeros(N_y,N_x);
+for j=1:N_y
+    for i=1:N_x
+        if Domain_ID(j,i)==0 % Solid Domain
+            if Domain_ID(j,i+1)==1 || Domain_ID(j,i-1)==1 || Domain_ID(j-1,i)==1 || Domain_ID(j+1,i)==1 || Domain_ID(j-1,i+1)==1 || Domain_ID(j-1,i-1)==1 || Domain_ID(j+1,i+1)==1 || Domain_ID(j+1,i-1)==1
+                Zone_ID(j,i)=1;
+            else
+                Zone_ID(j,i)=0;
+            end
+        else % Fluid Domain
+            if j==1 || j==N_y || i==1 || i==N_x
+                Zone_ID(j,i)=3;
+            else
+                if Domain_ID(j,i+1)==0 || Domain_ID(j,i-1)==0 || Domain_ID(j-1,i)==0 || Domain_ID(j+1,i)==0 || Domain_ID(j-1,i+1)==0 || Domain_ID(j-1,i-1)==0 || Domain_ID(j+1,i+1)==0 || Domain_ID(j+1,i-1)==0
+                    Zone_ID(j,i)=2;
+                else
+                    Zone_ID(j,i)=3;
+                end
+            end
+        end
+    end
+end
+contourf(flipud(Zone_ID),30)
+title("Zone_ID")
+axis equal tight
 
 % Initialization of equalibrium PDF.
 g_eq=zeros(N_y,N_x,9);
