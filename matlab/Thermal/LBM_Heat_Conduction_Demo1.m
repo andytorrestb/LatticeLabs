@@ -282,21 +282,37 @@ y_norm = y / L;
 
 % Sample and normalize temperature data.
 T_x = T(x_circ, :);
-T_y = T(:, y_circ);
+T_y = T(:, y_circ).';
 
 T_x = (T_x - T_2) / (T_3 - T_2);
 T_y = (T_y - T_2) / (T_3 - T_2);
 
 
 % load benchmark data into bm
-bm = load("Project3_Benchmark Data.mat")
+bm = load("Project3_Benchmark Data.mat");
+T_bench_x = bm.T_benchmark_hori;
+T_bench_y = bm.T_benchmark_vert;
+
 
 % Calculate L2 error for each graph.
-T_sim_interp_x = interp1(x_norm, T_x, bm.x_benchmark, 'linear');
-L2_x = sqrt(sum((T_sim_interp_x - bm.T_benchmark_hori).^2));
-
+T_sim_interp_x = interp1(x_norm, T_x, bm.x_benchmark, 'linear');  
 T_sim_interp_y = interp1(y_norm, T_y, bm.y_benchmark, 'linear');
-L2_y = sqrt(sum((T_sim_interp_y - bm.T_benchmark_vert).^2));
+% Number of x points in the b ench mark data.
+N_bm_x = length(T_bench_x);
+N_bm_y = length(T_bench_y);
+
+T_sim_interp_x(N_bm_x) = T_bench_x(N_bm_x);
+T_sim_interp_x(N_bm_x-1) = T_bench_x(N_bm_x-1);
+
+T_sim_interp_y(N_bm_y) = T_bench_y(N_bm_y);
+T_sim_interp_y(N_bm_y-1) = T_bench_y(N_bm_y-1);
+
+L2_x = sqrt(sum((T_sim_interp_x - T_bench_x).^2))
+
+
+disp('stop')
+
+L2_y = sqrt(sum((T_sim_interp_y - T_bench_y).^2));
 
 % Scatter plot
 figure;
