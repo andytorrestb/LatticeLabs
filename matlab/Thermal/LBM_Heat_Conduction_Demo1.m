@@ -251,23 +251,86 @@ for t=1:Timer
     g=g_new-1/Tau*(g_new-g_eq);
 end
 
+for j=1:N_y
+    for i=1:N_x
+        % Manually change 0 values to 1
+        if T(j,i) == 0
+            T(j,i) = 1;
+        end
+    end
+end
 %% Visualization
-% Analytical Solution
-x_benchmark=0:0.01:1;
-for i=1:length(x_benchmark)
-    T_benchmark(i)=-1*(x_benchmark(i)-1);
-end
 figure;
-plot(x_benchmark,T_benchmark,"red")
-% Simultion result
-for i=1:N_x
-    T_sim(i)=T((N_y-1)/2+1,i);
-end
-hold on
-plot((0:1:N_x-1)/(N_x-1),(T_sim-T_L)/(T_H-T_L),'blue');
-
-figure
 contourf(flipud(T),30)
 colormap(hot)
 axis equal tight
 
+
+% Establish arrays to store coordinate data for graphing.
+for i=1:N_x
+    x(i)=dx*(i-1);
+end
+
+for j=1:N_y
+    y(j)=dy*(j-1);
+end
+
+% Normalize array data
+x_norm = x / L;
+y_norm = y / L;
+
+
+% Sample and normalize temperature data.
+T_x = T(x_circ, :);
+T_y = T(:, y_circ);
+
+T_x = (T_x - T_2) / (T_3 - T_2);
+T_y = (T_y - T_2) / (T_3 - T_2);
+
+
+% load benchmark data into bm
+bm = load("Project3_Benchmark Data.mat")
+
+% Calculate L2 error for each graph.
+T_sim_interp_x = interp1(x_norm, T_x, bm.x_benchmark, 'linear');
+L2_x = sqrt(sum((T_sim_interp_x - bm.T_benchmark_hori).^2));
+
+T_sim_interp_y = interp1(y_norm, T_y, bm.y_benchmark, 'linear');
+L2_y = sqrt(sum((T_sim_interp_y - bm.T_benchmark_vert).^2));
+
+% Scatter plot
+figure;
+scatter(bm.x_benchmark, bm.T_benchmark_hori,'filled');  
+hold on;
+
+% Plot the smooth curve
+plot(x_norm, T_x, 'r-', 'LineWidth', 2);
+
+% Labels and title
+xlabel('normlalized x-coordinates (x*)');
+ylabel('Normalized Temperature (T*)');
+title('Normalized Temperature Along the Horizontal Mid Plane (T* vs x*)');
+legend('Data Points', 'Smooth Curve');
+grid on;
+% Add L2 norm as annotation
+text(0.05, 0.95, sprintf('L_2 Norm: %.4f', L2_x), ...
+    'Units', 'normalized', 'FontSize', 12, 'Color', 'k');
+
+figure;
+% Scatter plot
+scatter(bm.y_benchmark, bm.T_benchmark_vert,'filled');  
+hold on;
+
+% Plot the smooth curve
+plot(y_norm, T_y, 'r-', 'LineWidth', 2);
+
+% Labels and title
+xlabel('normlalized y-coordinates (y*)');
+ylabel('Normalized Temperature (T*)');
+title('Normalized Temperature Along the Vertical Mid Plane (T* vs y*)');
+legend('Data Points', 'Smooth Curve');
+grid on;
+
+% Add L2 norm as annotation
+text(0.05, 0.95, sprintf('L_2 Norm: %.4f', L2_y), ...
+    'Units', 'normalized', 'FontSize', 12, 'Color', 'k');
