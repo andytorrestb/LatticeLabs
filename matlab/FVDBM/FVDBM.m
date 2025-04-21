@@ -1,9 +1,10 @@
-function result = FVDBM()     
+function [] = FVDBM(dx)
+    tic;    
     %% Define physical and dimensional information
     Rho_ref=2; % Reference density
     U_lid=0.1; % This is the x-velocity on the moving lid
     
-    L=100; % The length of the entire computational domain
+    L=dx; % The length of the entire computational domain
     H=L; % The height of the entire computational domain
     N_nd_x=50; % The total number of nodes in x-direction
     N_nd_y=N_nd_x; % The total number of nodes in y-direction
@@ -22,10 +23,15 @@ function result = FVDBM()
     %% Define Boltzmann related information
     c_s=1/sqrt(3);
     dt=0.1;
-    Tau=0.3;
+    Tau=1.0;
     Ksi=[0 1 0 -1  0 1 -1 -1  1;...
          0 0 1  0 -1 1  1 -1 -1 ];
     w=[4/9 1/9 1/9 1/9 1/9 1/36 1/36 1/36 1/36];
+    
+    Re = 100;
+    
+    Tau = 0.5 + (U_lid*L)/(Re*c_s*c_s);
+    
     
     %% Initialization
     F=zeros(N_cv_y,N_cv_x,9); % The flux term in all direction at all CV centroids
@@ -51,10 +57,15 @@ function result = FVDBM()
     v_nd=zeros(N_nd_y,N_nd_x); % y-component of physical velocity at all nodes
     Rho_nd=ones(N_nd_y,N_nd_x)*Rho_ref; % The densities at all nodes
     
-    T=10000;
+    f_old = zeros(N_cv_y,N_cv_x,9);
+
+    res = sum(sum(sum(abs(f-f_old))));
+    tol = 1e-4;
+
+    t = 0;
     %% Solver
-    for t=1:T
-        disp(t)
+    while res > tol
+        f_old  = f;
         %% Boundary conditions-compute f_nd for all nodes on the boundaries
         for j=1:N_nd_y
             for i=1:N_nd_x
@@ -990,6 +1001,14 @@ function result = FVDBM()
     
         %% Update solution
         f=f_new;
+        
+        res = sum(sum(sum(abs(f-f_old))));
+
+        runtime = toc;
+        t=t+1;
+        if mod(t, 1000)==0
+            fprintf('iterations: %d,  redidual: %d runtime: %d\n', t, res, runtime);
+        end
     end
     
     %% Solution Visual Check
